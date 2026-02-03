@@ -16,23 +16,23 @@ frontend/dist/
 ############################
 # Backend
 ############################
-backend/node_modules/
-backend/dist/
-backend/build/
+server/node_modules/
+server/dist/
+server/build/
 
 ############################
 # Environment variables
 ############################
 .env
 frontend/.env
-backend/.env
+server/.env
 
 ############################
 # Logs
 ############################
 *.log
 logs/
-backend/logs/
+server/logs/
 
 ############################
 # OS / Editor files

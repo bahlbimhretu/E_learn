@@ -40,12 +40,12 @@ const ParentDashboard = () => {
       <main className="flex-1 p-6 overflow-y-auto">
         {/* Navbar */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Welcome, Mhretu Gebreslasie</h1>
+          <h1 className="text-2xl font-bold">Welcome, Parent</h1>
           <div className="flex items-center space-x-4">
             <BellIcon className="w-6 h-6 text-gray-600 cursor-pointer" />
             <div className="flex items-center space-x-2 cursor-pointer">
               <UserCircleIcon className="w-8 h-8 text-gray-600" />
-              <span className="text-gray-700">Mhretu Gebreslasie</span>
+              <span className="text-gray-700">Parent</span>
             </div>
           </div>
         </div>
