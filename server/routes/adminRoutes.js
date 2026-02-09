@@ -136,55 +136,6 @@ router.put(
   authorize("admin"),
   updateCourseInstance
 );
-
-//announcement routes can be added here in future
-
-
-
-
-/**
- * Admin / Teacher management
- */
-// Announcement routes
-router.get(
-  "/announcements",
-  protect,
-  authorize("admin", "teacher"),
-  getAnnouncements
-);
-
-router.post(
-  "/announcements",
-  protect,
-  authorize("admin", "teacher"),
-  createAnnouncement
-);
-
-router.put(
-  "/announcements/:id",
-  protect,
-  authorize("admin", "teacher"),
-  updateAnnouncement
-);
-
-router.patch(
-  "/announcements/:id/archive",
-  protect,
-  authorize("admin"),
-  archiveAnnouncement
-);
-router.get(
-  "/announcements/:id", 
-  protect, 
-getAnnouncementById);
-router.get(
-  "/announcements/feed",
-  protect,
-  authorize("student", "teacher", "parent"),
-  getAnnouncementFeed
-);
-
-
 export default router;
 
 

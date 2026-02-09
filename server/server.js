@@ -17,6 +17,7 @@ import path from "path";
 import adminStudentRoutes from "./routes/adminStudentRoutes.js";
 import "./models/CourseInstance.js";
 import "./models/Users.js";   // User model with post-save hook
+import announcementRoutes from "./routes/announcementRoutes.js";
 // app.js or server.js
 import studentRoutes from "./routes/studentRoutes.js";
 
@@ -54,7 +55,8 @@ app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 // Admin routes
 app.use("/api/admin", adminRoutes);
-
+// Announcement routes
+app.use("/api/announcements", announcementRoutes);
 // Admin User Management routes
 app.use("/api/admin/users", adminUserRoutes);
 
