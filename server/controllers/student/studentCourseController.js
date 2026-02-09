@@ -1,15 +1,11 @@
-// controllers/studentCourseController.js
 import CourseInstance from "../../models/CourseInstance.js";
 
 export const getStudentCourseInstances = async (req, res) => {
   try {
     const student = req.user;
 
-    // 🔒 Safety checks
     if (!student.studentProfile) {
-      return res.status(400).json({
-        message: "Student profile not found",
-      });
+      return res.status(400).json({ message: "Student profile not found" });
     }
 
     const { grade, section, academicYear } = student.studentProfile;
@@ -20,7 +16,6 @@ export const getStudentCourseInstances = async (req, res) => {
       });
     }
 
-    // 🔍 Find matching course instances
     const courses = await CourseInstance.find({
       grade,
       section,
@@ -29,7 +24,8 @@ export const getStudentCourseInstances = async (req, res) => {
     })
       .populate({
         path: "courseTemplate",
-        select: "title thumbnail description",
+        // 🔴 CHANGE HERE ONLY
+        select: "name thumbnail description",
       })
       .populate({
         path: "teacher",
@@ -37,15 +33,15 @@ export const getStudentCourseInstances = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-    // 🎯 Shape response for frontend
     const formattedCourses = courses.map((course) => ({
       _id: course._id,
       grade: course.grade,
       section: course.section,
       academicYear: course.academicYear,
 
-      courseName: course.courseTemplate?.title,
-      thumbnail: course.courseTemplate?.thumbnail,
+      // 🔴 CHANGE HERE ONLY
+      courseName: course.courseTemplate?.name,
+      thumbnail: course.courseTemplate?.thumbnail, // UNCHANGED
       teacherName: course.teacher?.name || "Unknown",
 
       createdAt: course.createdAt,
@@ -58,8 +54,6 @@ export const getStudentCourseInstances = async (req, res) => {
   }
 };
 
-// controllers/studentCourseController.js
-
 export const getStudentCourseInstanceById = async (req, res) => {
   try {
     const student = req.user;
@@ -68,9 +62,7 @@ export const getStudentCourseInstanceById = async (req, res) => {
     const { grade, section, academicYear } = student.studentProfile || {};
 
     if (!grade || !section || !academicYear) {
-      return res.status(400).json({
-        message: "Incomplete student profile",
-      });
+      return res.status(400).json({ message: "Incomplete student profile" });
     }
 
     const course = await CourseInstance.findOne({
@@ -82,7 +74,8 @@ export const getStudentCourseInstanceById = async (req, res) => {
     })
       .populate({
         path: "courseTemplate",
-        select: "title thumbnail description",
+        // 🔴 CHANGE HERE ONLY
+        select: "name thumbnail description",
       })
       .populate({
         path: "teacher",
@@ -97,9 +90,10 @@ export const getStudentCourseInstanceById = async (req, res) => {
 
     res.json({
       _id: course._id,
-      courseName: course.courseTemplate?.title,
+      // 🔴 CHANGE HERE ONLY
+      courseName: course.courseTemplate?.name,
       description: course.courseTemplate?.description,
-      thumbnail: course.courseTemplate?.thumbnail,
+      thumbnail: course.courseTemplate?.thumbnail, // UNCHANGED
       teacherName: course.teacher?.name,
       grade: course.grade,
       section: course.section,
@@ -110,4 +104,3 @@ export const getStudentCourseInstanceById = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-

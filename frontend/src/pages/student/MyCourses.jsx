@@ -62,19 +62,16 @@ const MyCourses = () => {
             className="cursor-pointer rounded-xl border bg-white shadow-sm hover:shadow-md transition overflow-hidden"
           >
             {/* Thumbnail */}
-            <div className="h-40 bg-gray-100">
-              {course.thumbnail ? (
-                <img
-                  src={course.thumbnail}
-                  alt={course.courseName}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-400">
-                  No Image
-                </div>
-              )}
-            </div>
+           <div className="h-40 bg-gray-100"> 
+            {course.thumbnail ? (
+              <img
+  src={`http://localhost:5000${course.thumbnail}`}
+  alt={course.courseName}
+  className="w-full h-full object-cover"
+/>
+
+            ) : ( <div className="flex items-center justify-center h-full text-gray-400"> No Image </div> )}
+             </div>
 
             {/* Content */}
             <div className="p-4">

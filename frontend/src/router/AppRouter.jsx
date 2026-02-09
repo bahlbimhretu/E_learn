@@ -35,6 +35,7 @@ import CourseInstanceDetails from "../pages/teacher/CourseInstanceDetails.jsx";
 import MyCourseInstances from "../pages/teacher/MyCourseInstances.jsx";
 import MyCourses from "../pages/student/MyCourses.jsx";
 import StudentCourseDetails from "../pages/student/StudentCourseDetails.jsx";
+import StudentAnnouncements from "../pages/student/StudentAnnouncements.jsx";
 
 
 export default function AppRouter() {
@@ -165,10 +166,19 @@ export default function AppRouter() {
 />
 
     <Route
-  path="/teacher/courses/:courseId/materials/upload"
+  path="/teacher/courses/:courseId/lessons/:lessonId/materials/upload"
   element={
     <ProtectedRoute allowedRoles={["teacher", "admin"]}>
       <UploadMaterial />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/student/announcements"
+  element={
+    <ProtectedRoute allowedRoles={["student", "teacher", "parent"]}>
+      <StudentAnnouncements />
     </ProtectedRoute>
   }
 />

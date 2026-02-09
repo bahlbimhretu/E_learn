@@ -37,7 +37,7 @@ const Sidebar = () => {
       { label: "Quizzes", link: "/my-quizzes", icon: HelpCircle },
       { label: "Grades & Feedback", link: "/my-grades", icon: Upload },
       { label: "Attendance", link: "/my-attendance", icon: Users },
-      { label: "Announcements", link: "/my-announcements", icon: Bell },
+      { label: "Announcements", link: "/student/announcements", icon: Bell },
       { label: "Profile / Settings", link: "/profile", icon: Settings },
     ],
 

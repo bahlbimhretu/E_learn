@@ -4,7 +4,7 @@ const materialSchema = mongoose.Schema(
   {
     course: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Course",
+      ref: "CourseInstance", // ✅ FIXED
       required: true,
     },
 
@@ -24,12 +24,11 @@ const materialSchema = mongoose.Schema(
       required: true,
     },
 
-   fileType: {
-  type: String,
-  enum: ["pdf", "image", "video", "file"], // ← ADD THIS
-  required: true,
-},
-
+    fileType: {
+      type: String,
+      enum: ["pdf", "image", "video", "file"],
+      required: true,
+    },
 
     uploadedBy: {
       type: mongoose.Schema.Types.ObjectId,

@@ -111,26 +111,41 @@ export const archiveAnnouncement = async (req, res) => {
  * GET /api/announcements/feed
  * Student / Teacher / Parent
  */
+/**
+ * GET /api/announcements/feed
+ * Student / Teacher / Parent
+ */
 export const getAnnouncementFeed = async (req, res) => {
   try {
+    console.log("USER IN FEED:", req.user);
+
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized (no user)" });
+    }
+
+    if (!req.user.role) {
+      return res.status(401).json({ message: "Unauthorized (no role)" });
+    }
+
     const role = req.user.role;
 
     const announcements = await Announcement.find({
       status: "published",
       isArchived: false,
-      $or: [
-        { audience: "all" },
-        { audience: role + "s" }, // student → students
-      ],
+      "audience.roles": role,
     })
       .sort({ publishedAt: -1 })
-      .limit(50);
+      .limit(50)
+      .select("title contentHtml publishedAt createdAt");
 
     res.json(announcements);
   } catch (err) {
+    console.error("FEED ERROR:", err);
     res.status(500).json({ message: "Failed to load feed" });
   }
 };
+
+
 /**
  * GET /api/announcements/:id
  * Admin / Teacher: get announcement details
