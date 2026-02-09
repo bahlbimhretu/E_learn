@@ -12,7 +12,6 @@ export const createCourseInstance = async (req, res) => {
       teacherId,
     } = req.body;
 
-    // 🔴 Validation
     if (!courseTemplateId || !academicYear || !grade || !section) {
       return res.status(400).json({ message: "Missing required fields" });
     }
@@ -22,7 +21,7 @@ export const createCourseInstance = async (req, res) => {
       return res.status(404).json({ message: "Course template not found" });
     }
 
-    // 🔹 Auto-enroll students
+    // 🔹 Find matching students
     const students = await User.find({
       role: "student",
       status: "active",
@@ -31,29 +30,37 @@ export const createCourseInstance = async (req, res) => {
       "studentProfile.academicYear": academicYear,
     }).select("_id");
 
-    const instance = await CourseInstance.create({
-      courseTemplate: courseTemplateId,
-      academicYear,
-      grade,
-      section,
-      teacher: teacherId || null,
-      students: students.map((s) => s._id),
-      createdBy: req.user._id,
-    });
+    // 🔹 Create OR update instance
+    const instance = await CourseInstance.findOneAndUpdate(
+      {
+        courseTemplate: courseTemplateId,
+        academicYear,
+        grade,
+        section,
+      },
+      {
+        $setOnInsert: {
+          teacher: teacherId || null,
+          createdBy: req.user._id,
+          status: "active",
+        },
+        $addToSet: {
+          students: { $each: students.map((s) => s._id) },
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+      }
+    );
 
     res.status(201).json(instance);
   } catch (error) {
     console.error("CREATE COURSE INSTANCE ERROR:", error);
-
-    if (error.code === 11000) {
-      return res.status(400).json({
-        message: "Course instance already exists for this grade, section, and year",
-      });
-    }
-
     res.status(500).json({ message: "Server error" });
   }
 };
+
 export const getCourseInstances = async (req, res) => {
   try {
     const instances = await CourseInstance.find()

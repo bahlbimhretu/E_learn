@@ -25,8 +25,7 @@ function checkFileType(file, cb) {
 }
 
 export const upload = multer({
-  storage,
-  fileFilter: (req, file, cb) => checkFileType(file, cb),
+  storage
 });
 
 

@@ -7,9 +7,30 @@ const materialSchema = mongoose.Schema(
       ref: "Course",
       required: true,
     },
-    title: { type: String, required: true },
-    fileUrl: { type: String, required: true },
-    fileType: { type: String, required: true }, // pdf, video, image…
+
+    lesson: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Lesson",
+      required: true,
+    },
+
+    title: {
+      type: String,
+      required: true,
+    },
+
+    fileUrl: {
+      type: String,
+      required: true,
+    },
+
+   fileType: {
+  type: String,
+  enum: ["pdf", "image", "video", "file"], // ← ADD THIS
+  required: true,
+},
+
+
     uploadedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

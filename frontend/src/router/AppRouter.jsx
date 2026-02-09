@@ -33,7 +33,8 @@ import AdminAnnouncements from "../pages/admin/announcement/Announcement.jsx";
 import AdminAnnouncementDetails from "../pages/admin/announcement/AdminAnnouncementDetails.jsx";
 import CourseInstanceDetails from "../pages/teacher/CourseInstanceDetails.jsx";
 import MyCourseInstances from "../pages/teacher/MyCourseInstances.jsx";
-
+import MyCourses from "../pages/student/MyCourses.jsx";
+import StudentCourseDetails from "../pages/student/StudentCourseDetails.jsx";
 
 
 export default function AppRouter() {
@@ -236,6 +237,9 @@ export default function AppRouter() {
       }
     />
 
+//student course instance routes
+<Route path="/my-courses" element={<MyCourses />} />
+//<Route path="/my-courses/:id" element={<StudentCourseDetails />} />
 
 // Inside Routes
 <Route 

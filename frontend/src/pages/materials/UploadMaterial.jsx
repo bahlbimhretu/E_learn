@@ -4,7 +4,7 @@ import api from "../../api/axios";
 import Layout from "../../layout/Layout";
 
 const UploadMaterial = () => {
-  const { courseId } = useParams();
+  const { courseId, lessonId } = useParams();
   const navigate = useNavigate();
 
   const [title, setTitle] = useState("");
@@ -27,17 +27,17 @@ const UploadMaterial = () => {
       const formData = new FormData();
       formData.append("title", title);
       formData.append("courseId", courseId);
+      formData.append("lessonId", lessonId);
       formData.append("file", file);
 
-     await api.post("/materials/upload", formData, {
-  headers: {
-    "Content-Type": "multipart/form-data",
-  },
-});
+      await api.post("/materials", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-      navigate(`/teacher/courses/${courseId}/materials`);
+      // Go back to lesson view
+      navigate(`/teacher/courses/${courseId}/lessons/${lessonId}`);
     } catch (err) {
-      console.log(err);
+      console.error(err);
       setError(err.response?.data?.message || "Upload failed");
     } finally {
       setUploading(false);
@@ -46,7 +46,7 @@ const UploadMaterial = () => {
 
   return (
     <Layout>
-      <h1 className="text-3xl font-bold mb-6">Upload Course Material</h1>
+      <h1 className="text-3xl font-bold mb-6">Upload Lesson Material</h1>
 
       <form
         onSubmit={handleUpload}
@@ -58,7 +58,7 @@ const UploadMaterial = () => {
         <input
           type="text"
           className="w-full p-2 border rounded mb-4"
-          placeholder="e.g., Chapter 1 Notes"
+          placeholder="e.g., Chapter 1 PDF"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
