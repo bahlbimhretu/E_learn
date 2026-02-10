@@ -18,6 +18,8 @@ import adminStudentRoutes from "./routes/adminStudentRoutes.js";
 import "./models/CourseInstance.js";
 import "./models/Users.js";   // User model with post-save hook
 import announcementRoutes from "./routes/announcementRoutes.js";
+import questionRoutes from "./routes/questionRoutes.js";
+import quizRoutes from "./routes/quizRoutes.js";
 // app.js or server.js
 import studentRoutes from "./routes/studentRoutes.js";
 
@@ -63,7 +65,11 @@ app.use("/api/admin/users", adminUserRoutes);
 app.use("/api/admin", adminStudentRoutes);
 //student routes
 app.use("/api/student", studentRoutes);
+// Question routes
+app.use("/api", questionRoutes);
 
+// Quiz routes
+app.use("/api/quizzes", quizRoutes);
 // Test routes
 app.get("/", (req, res) => {
   res.send("API running...");

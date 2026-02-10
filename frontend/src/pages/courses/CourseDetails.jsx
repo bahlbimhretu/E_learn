@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import api from "../../api/axios";
 import Layout from "../../layout/Layout";
 import { AuthContext } from "../../context/AuthContext";
+import LessonQuiz from "../lessons/LessonQuiz";
 
 const CourseDetails = () => {
   const { id: courseId } = useParams();
@@ -234,6 +235,9 @@ const CourseDetails = () => {
             ) : (
               <p className="text-gray-500 italic">No materials uploaded yet.</p>
             )}
+
+            {/* QUIZ BUILDER */}
+            <LessonQuiz lessonId={lesson._id} />
           </div>
         ))}
       </div>
