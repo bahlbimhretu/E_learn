@@ -4,7 +4,11 @@ import Question from "../models/Question.js";
 export const getExerciseQuiz = async (req, res) => {
   try {
     const { quizId } = req.params;
+    console.log("QuizId from URL:", quizId);
 
+    const quizs = await Quiz.findById(quizId);
+
+    console.log("Quiz found:", quizs);
     if (!req.user || req.user.role !== "student") {
       return res.status(403).json({ message: "Students only" });
     }
@@ -102,6 +106,7 @@ export const submitExerciseQuiz = async (req, res) => {
 
 export const getQuizByLesson = async (req, res) => {
   try {
+    
     const { lessonId } = req.params;
 
     console.log("Looking for lesson:", lessonId);

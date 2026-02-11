@@ -3,7 +3,8 @@ import { useParams } from "react-router-dom";
 import api from "../../api/axios";
 
 const StudentExerciseQuiz = () => {
-  const { id } = useParams(); // ✅ quizId from URL
+  const { quizId } = useParams(); 
+ // ✅ quizId from URL
 
   const [quiz, setQuiz] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -13,11 +14,11 @@ const StudentExerciseQuiz = () => {
 
   useEffect(() => {
     fetchQuiz();
-  }, [id]);
+  }, [quizId]);
 
   const fetchQuiz = async () => {
     try {
-      const res = await api.get(`/api/quizzes/${id}/exercise`);
+      const res = await api.get(`/quizzes/${quizId}/exercise`); 
       setQuiz(res.data.quiz);
       setQuestions(res.data.questions);
     } catch (err) {
@@ -58,8 +59,7 @@ const StudentExerciseQuiz = () => {
   const submitQuiz = async () => {
     try {
       const res = await api.post(
-        `/api/quizzes/${id}/exercise/submit`,
-        { answers }
+       (`/quizzes/${quizId}/exercise/submit`, { answers })
       );
       setResult(res.data);
     } catch (err) {

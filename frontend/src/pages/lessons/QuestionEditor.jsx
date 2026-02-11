@@ -1,5 +1,5 @@
 import api from "../../api/axios";
-import Layout from "../../layout/Layout";
+
 const QuestionEditor = ({ question, onUpdate, onDelete }) => {
   const save = async (field, value) => {
     // ✅ Correct path: /api/questions/:id
@@ -16,7 +16,7 @@ const QuestionEditor = ({ question, onUpdate, onDelete }) => {
   };
 
   return (
-    <Layout>
+    
     <div className="border p-3 rounded">
       <input
         value={question.text}
@@ -38,7 +38,7 @@ const QuestionEditor = ({ question, onUpdate, onDelete }) => {
         Delete question
       </button>
     </div>
-    </Layout>
+    
   );
 };
 

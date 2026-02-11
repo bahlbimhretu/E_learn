@@ -155,3 +155,23 @@ export const togglePublishQuiz = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+/**
+ * GET QUIZ BY LESSON
+ * GET /api/quizzes/lessons/:lessonId/quiz
+ */
+export const getQuizByLesson = async (req, res) => {
+  try {
+    const { lessonId } = req.params;
+
+    const quiz = await Quiz.findOne({ lesson: lessonId });
+
+    if (!quiz) {
+      return res.status(404).json({ message: "Quiz not found" });
+    }
+
+    res.json(quiz);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

@@ -10,8 +10,8 @@ const router = express.Router();
 
 router.get("/quizzes/:quizId/exercise", protect, getExerciseQuiz);
 router.post("/quizzes/:quizId/exercise/submit", protect, submitExerciseQuiz);
-// routes/quizRoutes.js
-
 router.get("/lessons/:lessonId/quiz", protect, getQuizByLesson);
+
+
 
 export default router;

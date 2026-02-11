@@ -84,14 +84,15 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
-       <Route
-  path="/student/quizzes/:quizId"
+      <Route
+  path="/student/exercise-quiz/:quizId"
   element={
     <ProtectedRoute allowedRoles={["student"]}>
-      <StudentExerciseQuiz/>
+      <StudentExerciseQuiz />
     </ProtectedRoute>
   }
 />
+
 
         <Route
           path="/teacher"

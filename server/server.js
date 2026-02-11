@@ -66,13 +66,16 @@ app.use("/api/admin/users", adminUserRoutes);
 app.use("/api/admin", adminStudentRoutes);
 //student routes
 app.use("/api/student", studentRoutes);
+app.use("/api/student", studentExerciseRoutes);
+
 // Question routes
 app.use("/api", questionRoutes);
 
 // Quiz routes
 app.use("/api/quizzes", quizRoutes);
 // student quiz routes
-app.use("/api", studentExerciseRoutes);
+
+
 
 // Test routes
 app.get("/", (req, res) => {
