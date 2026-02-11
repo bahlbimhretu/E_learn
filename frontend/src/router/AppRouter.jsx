@@ -37,6 +37,7 @@ import MyCourses from "../pages/student/MyCourses.jsx";
 import StudentCourseDetails from "../pages/student/StudentCourseDetails.jsx";
 import StudentAnnouncements from "../pages/student/StudentAnnouncements.jsx";
 import NewQuestion from "../pages/lessons/NewQuestion.jsx";
+import StudentExerciseQuiz from "../pages/student/StudentQuiz.jsx";
 
 
 export default function AppRouter() {
@@ -83,6 +84,14 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+       <Route
+  path="/student/quizzes/:quizId"
+  element={
+    <ProtectedRoute allowedRoles={["student"]}>
+      <StudentExerciseQuiz/>
+    </ProtectedRoute>
+  }
+/>
 
         <Route
           path="/teacher"
@@ -286,3 +295,5 @@ export default function AppRouter() {
     </BrowserRouter>
   );
 }
+
+

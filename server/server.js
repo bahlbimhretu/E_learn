@@ -22,6 +22,7 @@ import questionRoutes from "./routes/questionRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
 // app.js or server.js
 import studentRoutes from "./routes/studentRoutes.js";
+import studentExerciseRoutes from "./routes/studentExerciseRoutes.js";
 
 dotenv.config();
 connectDB(); // <-- CONNECT DB FIRST
@@ -70,6 +71,9 @@ app.use("/api", questionRoutes);
 
 // Quiz routes
 app.use("/api/quizzes", quizRoutes);
+// student quiz routes
+app.use("/api", studentExerciseRoutes);
+
 // Test routes
 app.get("/", (req, res) => {
   res.send("API running...");

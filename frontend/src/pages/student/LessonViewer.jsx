@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import LessonMaterials from "./LessonMaterials";
+
 const getEmbedUrl = (url) => {
   if (!url) return "";
 
