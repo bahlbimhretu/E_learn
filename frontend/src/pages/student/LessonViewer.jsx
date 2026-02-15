@@ -1,30 +1,50 @@
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import LessonMaterials from "./LessonMaterials";
+import api from "../../api/axios"; // your axios instance
 
 const getEmbedUrl = (url) => {
   if (!url) return "";
-
   if (url.includes("youtube.com/embed")) return url;
-
   if (url.includes("watch?v=")) {
     const id = url.split("watch?v=")[1].split("&")[0];
     return `https://www.youtube.com/embed/${id}`;
   }
-
   if (url.includes("youtu.be/")) {
     const id = url.split("youtu.be/")[1].split("?")[0];
     return `https://www.youtube.com/embed/${id}`;
   }
-
   return url;
 };
 
-
 const LessonViewer = ({ lessons, currentIndex, setCurrentIndex }) => {
+  const [materials, setMaterials] = useState([]);
   const lesson = lessons[currentIndex];
 
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex < lessons.length - 1;
+
+  // 🔹 Fetch materials whenever the lesson changes
+  useEffect(() => {
+    if (!lesson?._id) {
+      setMaterials([]);
+      return;
+    }
+
+    const fetchMaterials = async () => {
+      try {
+        const res = await api.get(`/materials/lesson/${lesson._id}`);
+        setMaterials(res.data);
+      } catch (err) {
+        console.error("Failed to fetch materials:", err);
+        setMaterials([]);
+      }
+    };
+
+    fetchMaterials();
+  }, [lesson?._id]);
+
+  if (!lesson) return null;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border">
@@ -48,10 +68,10 @@ const LessonViewer = ({ lessons, currentIndex, setCurrentIndex }) => {
               allowFullScreen
             />
           </div>
-          
         )}
-{/* Lesson Materials */}
-<LessonMaterials materials={lesson.materials} />
+
+        {/* Materials */}
+        <LessonMaterials materials={materials} />
 
         {/* Text Content */}
         {lesson.content && (
@@ -74,8 +94,7 @@ const LessonViewer = ({ lessons, currentIndex, setCurrentIndex }) => {
                 : "opacity-40 cursor-not-allowed"
             }`}
         >
-          <ChevronLeft size={16} />
-          Previous
+          <ChevronLeft size={16} /> Previous
         </button>
 
         <span className="text-sm text-gray-500">
@@ -92,8 +111,7 @@ const LessonViewer = ({ lessons, currentIndex, setCurrentIndex }) => {
                 : "opacity-40 cursor-not-allowed"
             }`}
         >
-          Next
-          <ChevronRight size={16} />
+          Next <ChevronRight size={16} />
         </button>
       </div>
     </div>

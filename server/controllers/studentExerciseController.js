@@ -93,11 +93,17 @@ export const submitExerciseQuiz = async (req, res) => {
       };
     });
 
-    res.json({
-      score: totalScore,
-      totalPoints: quiz.totalPoints,
-      results,
-    });
+   const totalPoints = questions.reduce(
+  (sum, q) => sum + q.points,
+  0
+);
+
+res.json({
+  score: totalScore,
+  totalPoints,
+  results,
+});
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

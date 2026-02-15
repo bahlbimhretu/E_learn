@@ -54,7 +54,8 @@ const StudentCourseDetails = () => {
       setQuizId(null);
 
       try {
-        const res = await api.get(`/lessons/${lessonId}/quiz`);
+        const res = await api.get(`/student/lessons/${lessonId}/quiz`)
+
 
         if (res.data?._id) {
           setQuizExists(true);

@@ -39,22 +39,30 @@ const NewQuestion = () => {
 
   // Submit new question
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post(`/quizzes/${quizId}/questions`, {
-        type,
-        text,
-        options,
-        correctAnswers,
-        points: Number(points),
-        order: 0,
-      });
-      navigate(`/teacher/quizzes/${quizId}`); // redirect after adding question
-    } catch (err) {
-      console.error("Add question failed:", err.response?.status, err.response?.data);
-      setError(err.response?.data?.message || "Failed to add question");
-    }
-  };
+  e.preventDefault();
+  setError("");
+
+  try {
+    await api.post(`/quizzes/${quizId}/questions`, {
+      type,
+      text,
+      options,
+      correctAnswers,
+      points: Number(points),
+      order: 0,
+    });
+
+    // ✅ Reset form instead of navigating
+    setText("");
+    setOptions([{ text: "" }, { text: "" }]);
+    setCorrectAnswers([]);
+    setPoints(1);
+
+  } catch (err) {
+    console.error("Add question failed:", err.response?.status);
+    setError(err.response?.data?.message || "Failed to add question");
+  }
+};
 
   // Publish quiz
   const handlePublish = async () => {
