@@ -132,6 +132,18 @@ const CourseDetails = () => {
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
+          {/* TEACHER MARK ENTRY */}
+{(user?.role === "teacher" || user?.role === "admin") && (
+  <div className="mt-6">
+    <Link
+      to={`/teacher/course/${courseId}/marks`}
+      className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+    >
+      📊 Mark Entry
+    </Link>
+  </div>
+)}
+
           <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
             {course.courseTemplate?.subject || "General"}
           </span>

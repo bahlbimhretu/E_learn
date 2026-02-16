@@ -4,6 +4,7 @@ import { protect } from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
 import { getStudentCourseInstances, getStudentCourseInstanceById } from "../controllers/student/studentCourseController.js";
 import { getStudentLessonsByCourse } from "../controllers/student/studentLessonController.js";
+import { getStudentCourseMarks } from "../controllers/getStudentCourseMarks.js";
 const router = express.Router();
 
 router.get(
@@ -27,4 +28,11 @@ router.get(
   authorize("student"),
   getStudentLessonsByCourse
 );
+router.get(
+  "/course-instances/:id/marks",
+  protect,
+  authorize("student"),
+  getStudentCourseMarks
+);
+
 export default router;

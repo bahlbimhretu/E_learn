@@ -75,7 +75,7 @@ app.use("/api", questionRoutes);
 app.use("/api/quizzes", quizRoutes);
 // student quiz routes
 
-app.use("/api/student/quizzes", quizRoutes);
+
 
 // Test routes
 app.get("/", (req, res) => {

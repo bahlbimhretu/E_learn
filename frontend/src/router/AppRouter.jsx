@@ -38,7 +38,7 @@ import StudentCourseDetails from "../pages/student/StudentCourseDetails.jsx";
 import StudentAnnouncements from "../pages/student/StudentAnnouncements.jsx";
 import NewQuestion from "../pages/lessons/NewQuestion.jsx";
 import StudentExerciseQuiz from "../pages/student/StudentQuiz.jsx";
-
+import MarksPage from "../pages/teacher/MarksPage.jsx";
 
 export default function AppRouter() {
   return (
@@ -220,6 +220,14 @@ export default function AppRouter() {
     </ProtectedRoute>
   }
 />
+<Route
+  path="/teacher/course/:courseId/marks"
+  element={ <ProtectedRoute allowedRoles={["teacher"]}>
+  <MarksPage />
+</ProtectedRoute>
+  }
+/>
+
 // Added routes for course instances
 <Route
   path="/admin/course-instances"  

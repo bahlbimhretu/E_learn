@@ -1,11 +1,5 @@
-import CourseInstance from "../../models/CourseInstance.js";
-import Result from "../../models/Result.js";
-import { recalculateStudentSummary } from "../../services/summaryService.js";
-
-/**
- * GET MARKS FOR COURSE (PER SEMESTER)
- * GET /api/teacher/course-instances/:id/marks?semester=1
- */
+import CourseInstance from "../models/CourseInstance.js";
+import Result from "../models/Result.js";
 export const getCourseMarks = async (req, res) => {
   try {
     const { id } = req.params;
@@ -13,43 +7,47 @@ export const getCourseMarks = async (req, res) => {
 
     const course = await CourseInstance.findById(id)
       .populate("students", "name")
-      .populate("courseTemplate");
+      .populate("courseTemplate", "name");
 
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    const students = [];
+    // 🔒 Ensure teacher owns this course
+    if (course.teacher.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    const studentsData = [];
 
     for (const student of course.students) {
       let result = await Result.findOne({
         student: student._id,
-        courseInstance: course._id,
+        courseInstance: id,
       });
 
-      // create result if not exists
       if (!result) {
         result = await Result.create({
           student: student._id,
-          courseInstance: course._id,
+          courseInstance: id,
           academicYear: course.academicYear,
           grade: course.grade,
           section: course.section,
         });
       }
 
-      const semData =
+      const sem =
         semester === 1 ? result.semester1 : result.semester2;
 
-      students.push({
+      studentsData.push({
         studentId: student._id,
         name: student.name,
-        quiz1: semData.quiz1,
-        mid: semData.mid,
-        quiz2: semData.quiz2,
-        participation: semData.participation,
-        final: semData.final,
-        total: semData.total,
+        quiz1: sem.quiz1,
+        mid: sem.mid,
+        quiz2: sem.quiz2,
+        participation: sem.participation,
+        final: sem.final,
+        total: sem.total,
       });
     }
 
@@ -60,61 +58,61 @@ export const getCourseMarks = async (req, res) => {
         section: course.section,
         academicYear: course.academicYear,
       },
-      students,
+      students: studentsData,
     });
   } catch (error) {
+    console.error("GET MARKS ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 };
-
-/**
- * BULK UPDATE MARKS
- * PUT /api/teacher/course-instances/:id/marks
- */
 export const updateCourseMarks = async (req, res) => {
   try {
     const { id } = req.params;
     const { semester, marks } = req.body;
 
     const course = await CourseInstance.findById(id);
+
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
+    }
+
+    if (course.teacher.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Unauthorized" });
     }
 
     for (const entry of marks) {
       const { studentId, quiz1, mid, quiz2, participation, final } = entry;
 
-      const updateField =
-        semester === 1 ? "semester1" : "semester2";
+      let result = await Result.findOne({
+        student: studentId,
+        courseInstance: id,
+      });
 
-      const result = await Result.findOneAndUpdate(
-        {
+      if (!result) {
+        result = new Result({
           student: studentId,
           courseInstance: id,
-        },
-        {
-          [updateField]: {
-            quiz1,
-            mid,
-            quiz2,
-            participation,
-            final,
-          },
-        },
-        { new: true, upsert: true }
-      );
+          academicYear: course.academicYear,
+          grade: course.grade,
+          section: course.section,
+        });
+      }
 
-      // 🔹 After each subject update, recalc summary + ranking
-      await recalculateStudentSummary(
-        studentId,
-        course.academicYear,
-        course.grade,
-        course.section
-      );
+      const semField = semester === 1 ? "semester1" : "semester2";
+
+      result[semField].quiz1 = quiz1;
+      result[semField].mid = mid;
+      result[semField].quiz2 = quiz2;
+      result[semField].participation = participation;
+      result[semField].final = final;
+
+      await result.save(); // 🔥 triggers middleware
     }
 
     res.json({ message: "Marks updated successfully" });
   } catch (error) {
+    console.error("UPDATE MARKS ERROR:", error);
     res.status(500).json({ message: error.message });
   }
 };
+

@@ -24,7 +24,7 @@ const Sidebar = () => {
       { label: "Assignments", link: "/teacher/assignments", icon: ClipboardList },
       { label: "Quizzes", link: "/teacher/quizzes", icon: HelpCircle },
       { label: "Attendance", link: "/teacher/attendance", icon: Users },
-      { label: "Result & Grading", link: "/teacher/grading", icon: Upload },
+     { label: "Mark Entry", link: "/teacher/marks", icon: ClipboardList },
       { label: "Announcements", link: "/teacher/announcements", icon: Bell },
       { label: "Settings", link: "/settings", icon: Settings },
     ],

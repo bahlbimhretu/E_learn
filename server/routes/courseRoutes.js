@@ -6,6 +6,10 @@ import {
   getMyCourseInstances,
   getMyCourseInstance
 } from "../controllers/courseController.js"; // new teacher controller
+import {
+  getCourseMarks,
+  updateCourseMarks
+} from "../controllers/teacherMarksController.js";
 
 const router = express.Router();
 
@@ -27,6 +31,24 @@ router.get(
   protect,
   authorize("teacher"),
   getMyCourseInstance
+);
+
+// =====================
+// TEACHER MARKS ROUTES
+// =====================
+
+router.get(
+  "/teacher/course-instances/:id/marks",
+  protect,
+  authorize("teacher"),
+  getCourseMarks
+);
+
+router.put(
+  "/teacher/course-instances/:id/marks",
+  protect,
+  authorize("teacher"),
+  updateCourseMarks
 );
 
 export default router;
