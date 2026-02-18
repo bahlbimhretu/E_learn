@@ -28,6 +28,15 @@ const Sidebar = () => {
       { label: "Announcements", link: "/teacher/announcements", icon: Bell },
       { label: "Settings", link: "/settings", icon: Settings },
     ],
+    parent: [
+  { label: "Dashboard", link: "/parent", icon: LayoutDashboard },
+  { label: "My Children", link: "/parent/children", icon: Users },
+  { label: "Progress Tracking", link: "/parent/progress", icon: BookOpen },
+  { label: "Performance (Results)", link: "/parent/results", icon: ClipboardList },
+  { label: "Attendance", link: "/parent/attendance", icon: Users },
+  { label: "Announcements", link: "/parent/announcements", icon: Bell },
+  { label: "Profile / Settings", link: "/profile", icon: Settings },
+],
 
     student: [
       { label: "Dashboard", link: "/dashboard", icon: LayoutDashboard },
@@ -41,10 +50,7 @@ const Sidebar = () => {
       { label: "Profile / Settings", link: "/profile", icon: Settings },
     ],
 
-    admin: [
-      { label: "Dashboard", link: "/admin", icon: LayoutDashboard },
-      { label: "Users", link: "/admin/users", icon: Users },
-    ],
+  
   };
 
   const items = menu[user?.role] || [];

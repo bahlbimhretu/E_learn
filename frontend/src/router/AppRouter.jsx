@@ -41,6 +41,7 @@ import StudentExerciseQuiz from "../pages/student/StudentQuiz.jsx";
 import MarksPage from "../pages/teacher/MarksPage.jsx";
  import TeacherAnnouncements from "../pages/teacher/TeacherAnnouncements.jsx";
  import ParentDashboard from "../pages/dashboard/parentDashboard.jsx";
+  import ParentResults from "../pages/parent/ParentResults.jsx";
 
 export default function AppRouter() {
   return (
@@ -71,7 +72,12 @@ export default function AppRouter() {
     </ProtectedRoute>
   }
 />
-
+<Route path="/parent/results" 
+element={
+  <ProtectedRoute allowedRoles={["parent"]}>
+<ParentResults />
+</ProtectedRoute>
+} />
 <Route
   path="/admin/register"
   element={

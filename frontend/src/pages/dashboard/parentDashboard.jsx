@@ -1,112 +1,208 @@
-// App.jsx
-import React from "react";
-import { BellIcon, UserCircleIcon } from "@heroicons/react/24/outline";
+import { useContext, useEffect, useState } from "react";
+import Layout from "../../layout/Layout";
+import { AuthContext } from "../../context/AuthContext";
+import api from "../../api/axios";
 
-const sidebarItems = [
-  { name: "Dashboard" },
-  { name: "Academic Progress" },
-  { name: "Attendance" },
-  { name: "Announcements" },
-  { name: "Messages" },
-  { name: "Settings" },
-];
+// 🔹 Reusable Stat Card
+const StatCard = ({ title, value, color }) => {
+  const colors = {
+    blue: "text-blue-600",
+    green: "text-green-600",
+    purple: "text-purple-600",
+    orange: "text-orange-600",
+  };
 
-const updates = [
-  { title: "Winter Break Schedule", date: "2024-12-15", type: "school", new: true },
-  { title: "Parent-Teacher Conference", date: "2024-12-14", type: "class", new: true },
-  { title: "Mathematics Competition", date: "2024-12-12", type: "subject", new: false },
-];
+  return (
+    <div className="bg-white p-5 rounded-xl shadow-sm border">
+      <p className="text-sm text-gray-500">{title}</p>
+      <p className={`text-2xl font-bold mt-2 ${colors[color]}`}>
+        {value ?? "--"}
+      </p>
+    </div>
+  );
+};
 
 const ParentDashboard = () => {
+  const { user } = useContext(AuthContext);
+
+  const [children, setChildren] = useState([]);
+  const [selectedChild, setSelectedChild] = useState(null);
+  const [overview, setOverview] = useState(null);
+  const [performance, setPerformance] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // 🔹 Fetch children
+  useEffect(() => {
+    const fetchChildren = async () => {
+      try {
+        const { data } = await api.get("/parent/children");
+        setChildren(data);
+
+        if (data.length > 0) {
+          setSelectedChild(data[0]);
+        }
+      } catch (err) {
+        console.error("Error fetching children", err);
+      }
+    };
+
+    fetchChildren();
+  }, []);
+
+  // 🔹 Fetch overview + performance when child changes
+  useEffect(() => {
+    if (!selectedChild) return;
+
+    const fetchChildData = async () => {
+      try {
+        setLoading(true);
+
+        const [overviewRes, performanceRes] = await Promise.all([
+          api.get(`/parent/${selectedChild._id}/overview`),
+          api.get(`/parent/${selectedChild._id}/performance`),
+        ]);
+
+        setOverview(overviewRes.data);
+        setPerformance(performanceRes.data);
+      } catch (err) {
+        console.error("Error fetching child data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChildData();
+  }, [selectedChild]);
+
+  // 🔹 Risk detection
+  const riskAlerts = [];
+
+  if (overview?.overallAverage < 60) {
+    riskAlerts.push("Overall performance is below passing level.");
+  }
+
   return (
-    <div className="flex h-screen bg-gray-100 font-sans">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-md p-6 flex flex-col">
-        <h2 className="text-xl font-bold mb-8">Parent Portal</h2>
-        <p className="text-gray-500 mb-6 text-sm">Student Management System</p>
-        <nav className="flex-1">
-          {sidebarItems.map((item) => (
-            <div
-              key={item.name}
-              className="py-2 px-3 mb-2 rounded hover:bg-blue-100 cursor-pointer"
+    <Layout>
+      <div>
+        {/* Header */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold">Parent Dashboard</h2>
+          <p className="text-gray-500 text-sm">
+            Welcome, {user?.name}
+          </p>
+        </div>
+
+        {/* Child Selector */}
+        {children.length > 0 && (
+          <div className="mb-6">
+            <label className="text-sm text-gray-600 mr-3">
+              Select Child:
+            </label>
+            <select
+              value={selectedChild?._id}
+              onChange={(e) =>
+                setSelectedChild(
+                  children.find(
+                    (child) => child._id === e.target.value
+                  )
+                )
+              }
+              className="border rounded px-3 py-2 text-sm bg-white"
             >
-              {item.name}
-            </div>
-          ))}
-        </nav>
-      </aside>
-
-      {/* Main content */}
-      <main className="flex-1 p-6 overflow-y-auto">
-        {/* Navbar */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Welcome, Parent</h1>
-          <div className="flex items-center space-x-4">
-            <BellIcon className="w-6 h-6 text-gray-600 cursor-pointer" />
-            <div className="flex items-center space-x-2 cursor-pointer">
-              <UserCircleIcon className="w-8 h-8 text-gray-600" />
-              <span className="text-gray-700">Parent</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded shadow">
-            <p className="text-sm text-gray-500">Current Term</p>
-            <p className="text-lg font-semibold">Fall 2024</p>
-          </div>
-          <div className="bg-white p-4 rounded shadow">
-            <p className="text-sm text-gray-500">Overall GPA</p>
-            <p className="text-lg font-semibold text-green-600">3.7</p>
-          </div>
-          <div className="bg-white p-4 rounded shadow">
-            <p className="text-sm text-gray-500">Attendance Rate</p>
-            <p className="text-lg font-semibold text-purple-600">96%</p>
-          </div>
-          <div className="bg-white p-4 rounded shadow flex justify-between items-center">
-            <div>
-              <p className="text-sm text-gray-500">New Updates</p>
-              <p className="text-lg font-semibold">2</p>
-            </div>
-            <BellIcon className="w-6 h-6 text-orange-400" />
-          </div>
-        </div>
-
-        {/* Performance Trends & Recent Updates */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Performance Trends */}
-          <div className="bg-white p-4 rounded shadow">
-            <h2 className="font-semibold mb-4">Performance Trends</h2>
-            <p className="text-sm text-gray-500 mb-2">Overall grade progression</p>
-            <div className="w-full h-40 bg-gray-100 flex items-center justify-center text-gray-400">
-              {/* Placeholder for chart */}
-              Chart Placeholder
-            </div>
-          </div>
-
-          {/* Recent Updates */}
-          <div className="bg-white p-4 rounded shadow">
-            <h2 className="font-semibold mb-4">Recent Updates</h2>
-            <ul className="space-y-3">
-              {updates.map((update, idx) => (
-                <li key={idx} className="flex justify-between items-center">
-                  <div>
-                    <p className="text-gray-700">{update.title}</p>
-                    <p className="text-xs text-gray-400">{update.date} • {update.type}</p>
-                  </div>
-                  {update.new && (
-                    <span className="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full">
-                      New
-                    </span>
-                  )}
-                </li>
+              {children.map((child) => (
+                <option key={child._id} value={child._id}>
+                  {child.name} (Grade {child.studentProfile?.grade} - {child.studentProfile?.section})
+                </option>
               ))}
-            </ul>
+            </select>
           </div>
-        </div>
-      </main>
-    </div>
+        )}
+
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
+          <>
+            {/* Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+              <StatCard
+                title="Overall Average"
+                value={`${overview?.overallAverage ?? "--"}%`}
+                color="green"
+              />
+              <StatCard
+                title="Enrolled Courses"
+                value={overview?.enrolledCourses}
+                color="blue"
+              />
+              <StatCard
+                title="Subjects With Results"
+                value={overview?.subjectsCount}
+                color="purple"
+              />
+            </div>
+
+            {/* Risk Alerts */}
+            {riskAlerts.length > 0 && (
+              <div className="mb-8 space-y-3">
+                {riskAlerts.map((alert, index) => (
+                  <div
+                    key={index}
+                    className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-lg text-sm"
+                  >
+                    ⚠ {alert}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Performance Section */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border">
+              <h3 className="font-semibold mb-4">
+                Subject Performance
+              </h3>
+
+              {performance.length === 0 ? (
+                <p className="text-gray-500 text-sm">
+                  No results available yet.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {performance.map((subject, idx) => (
+                    <div key={idx}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>{subject.subject}</span>
+                        <span
+                          className={
+                            subject.finalScore < 60
+                              ? "text-red-600 font-semibold"
+                              : "text-gray-700"
+                          }
+                        >
+                          {subject.finalScore}%
+                        </span>
+                      </div>
+
+                      <div className="w-full bg-gray-200 h-2 rounded">
+                        <div
+                          className={`h-2 rounded ${
+                            subject.finalScore < 60
+                              ? "bg-red-500"
+                              : "bg-blue-600"
+                          }`}
+                          style={{
+                            width: `${subject.finalScore}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </Layout>
   );
 };
 

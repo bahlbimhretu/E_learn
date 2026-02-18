@@ -56,16 +56,7 @@ const AdminLayout = ({ children }) => {
             <BookOpen size={18} />
             Course Management
           </NavLink>
-            <NavLink
-              to="/admin/homeroom"
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2 rounded-lg transition
-                ${isActive ? "bg-blue-600 text-white" : "hover:bg-white/10"}`
-              }
-            >
-              <Users size={18} />
-              Home Room Assignment
-            </NavLink>
+           
 
 
           <NavLink to="/admin/reports" className={({ isActive }) =>

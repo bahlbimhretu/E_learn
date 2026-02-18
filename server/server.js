@@ -23,6 +23,7 @@ import quizRoutes from "./routes/quizRoutes.js";
 // app.js or server.js
 import studentRoutes from "./routes/studentRoutes.js";
 import studentExerciseRoutes from "./routes/studentExerciseRoutes.js";
+import parentRoutes from "./routes/parentRoutes.js";
 
 dotenv.config();
 connectDB(); // <-- CONNECT DB FIRST
@@ -75,7 +76,7 @@ app.use("/api", questionRoutes);
 app.use("/api/quizzes", quizRoutes);
 // student quiz routes
 
-
+app.use("/api/parent", parentRoutes);
 
 // Test routes
 app.get("/", (req, res) => {
