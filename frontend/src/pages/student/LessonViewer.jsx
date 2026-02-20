@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import LessonMaterials from "./LessonMaterials";
 import api from "../../api/axios"; // your axios instance
+import LessonAssignmentsStudent from "../student/LessonAssignmentsStudent";
 
 const getEmbedUrl = (url) => {
   if (!url) return "";
@@ -80,6 +81,7 @@ const LessonViewer = ({ lessons, currentIndex, setCurrentIndex }) => {
             dangerouslySetInnerHTML={{ __html: lesson.content }}
           />
         )}
+        <LessonAssignmentsStudent lessonId={lesson._id} />
       </div>
 
       {/* Navigation */}

@@ -24,7 +24,8 @@ import quizRoutes from "./routes/quizRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js";
 import studentExerciseRoutes from "./routes/studentExerciseRoutes.js";
 import parentRoutes from "./routes/parentRoutes.js";
-
+import assignmentRoutes from "./routes/assignmentRoutes.js";
+import submissionRoutes from "./routes/submissionRoutes.js";
 dotenv.config();
 connectDB(); // <-- CONNECT DB FIRST
 
@@ -75,6 +76,8 @@ app.use("/api", questionRoutes);
 // Quiz routes
 app.use("/api/quizzes", quizRoutes);
 // student quiz routes
+app.use("/api/assignments", assignmentRoutes);
+app.use("/api/submissions", submissionRoutes);
 
 app.use("/api/parent", parentRoutes);
 

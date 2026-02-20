@@ -1,5 +1,6 @@
 // controllers/announcementController.js
 import { Announcement } from "../models/Announcement.js";
+import User from "../models/Users.js";
 
 /**
  * GET /api/announcements
@@ -117,22 +118,60 @@ export const archiveAnnouncement = async (req, res) => {
  */
 export const getAnnouncementFeed = async (req, res) => {
   try {
-    console.log("USER IN FEED:", req.user);
-
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized (no user)" });
     }
 
-    if (!req.user.role) {
-      return res.status(401).json({ message: "Unauthorized (no role)" });
-    }
-
     const role = req.user.role;
 
-    const announcements = await Announcement.find({
+    let grade = null;
+    let section = null;
+
+    // If student → get grade/section
+    if (role === "student") {
+      grade = req.user.studentProfile?.grade;
+      section = req.user.studentProfile?.section;
+    }
+
+    // If parent → use first child (for now)
+    if (role === "parent") {
+      const child = await User.findOne({
+        guardian: req.user._id,
+      });
+
+      if (child) {
+        grade = child.studentProfile?.grade;
+        section = child.studentProfile?.section;
+      }
+    }
+
+    const baseQuery = {
       status: "published",
       isArchived: false,
       "audience.roles": role,
+    };
+
+    const gradeCondition = grade
+      ? {
+          $or: [
+            { "audience.grades": { $size: 0 } },
+            { "audience.grades": grade },
+          ],
+        }
+      : {};
+
+    const sectionCondition = section
+      ? {
+          $or: [
+            { "audience.sections": { $size: 0 } },
+            { "audience.sections": section },
+          ],
+        }
+      : {};
+
+    const announcements = await Announcement.find({
+      ...baseQuery,
+      $and: [gradeCondition, sectionCondition],
     })
       .sort({ publishedAt: -1 })
       .limit(50)

@@ -4,6 +4,7 @@ import api from "../../api/axios";
 import Layout from "../../layout/Layout";
 import { AuthContext } from "../../context/AuthContext";
 import LessonQuiz from "../lessons/LessonQuiz";
+import LessonAssignments from "../lessons/LessonAssignments";
 
 const CourseDetails = () => {
   const { id: courseId } = useParams();
@@ -250,7 +251,14 @@ const CourseDetails = () => {
 
             {/* QUIZ BUILDER */}
             <LessonQuiz lessonId={lesson._id} />
+            {/* ASSIGNMENTS */}
+<LessonAssignments
+  lessonId={lesson._id}
+  courseId={courseId}
+/>
+
           </div>
+          
         ))}
       </div>
     </Layout>

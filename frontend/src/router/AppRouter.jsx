@@ -42,6 +42,9 @@ import MarksPage from "../pages/teacher/MarksPage.jsx";
  import TeacherAnnouncements from "../pages/teacher/TeacherAnnouncements.jsx";
  import ParentDashboard from "../pages/dashboard/parentDashboard.jsx";
   import ParentResults from "../pages/parent/ParentResults.jsx";
+import ParentAnnouncements from "../pages/materials/ParentAnnouncements.jsx";
+import TeacherCreateAssignment from "../pages/teacher/TeacherCreateAssignment.jsx";
+import TeacherSubmissionsPage from "../pages/teacher/TeacherSubmissionsPage.jsx";
 
 export default function AppRouter() {
   return (
@@ -78,6 +81,30 @@ element={
 <ParentResults />
 </ProtectedRoute>
 } />
+<Route path="/parent/announcements" 
+element={
+  <ProtectedRoute allowedRoles={["parent"]}>
+<ParentAnnouncements />
+</ProtectedRoute>}
+ />
+<Route
+  path="/teacher/courses/:courseId/lessons/:lessonId/assignments/create"
+  element=
+  {
+   <ProtectedRoute allowedRoles={["teacher"]}>
+  <TeacherCreateAssignment />
+</ProtectedRoute>
+  }
+/>
+// Inside your Routes in App.jsx
+<Route 
+  path="/teacher/assignments/:assignmentId/submissions" 
+  element={
+  <ProtectedRoute allowedRoles={["teacher"]}>
+  <TeacherSubmissionsPage />
+</ProtectedRoute>
+} />
+
 <Route
   path="/admin/register"
   element={
