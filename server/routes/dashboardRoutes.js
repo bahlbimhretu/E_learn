@@ -8,6 +8,7 @@ import {
   getAdminDashboardStats,
   getLibraryDashboardStats,
 } from "../controllers/dashboardController.js";
+import { getHomeroomDashboardStats } from "../controllers/homeroomDashboardController.js";
 
 const router = express.Router();
 
@@ -19,7 +20,12 @@ router.get("/teacher", protect, authorize("teacher", "admin"), getTeacherDashboa
 
 // Admin
 router.get("/admin", protect, authorize("admin"), getAdminDashboardStats);
-
+router.get(
+  "/dashboard/homeroom",
+  protect,
+  authorize("homeroomTeacher"),
+  getHomeroomDashboardStats
+);
 // Library admin
 router.get("/library", protect, authorize("library-admin", "admin"), getLibraryDashboardStats);
 

@@ -22,7 +22,7 @@ const announcementSchema = new mongoose.Schema(
       },
 
       // future-ready (not used yet)
-      grades: [{ type: Number }],
+      grades: [{ type: String }],
       sections: [{ type: String }],
     },
 

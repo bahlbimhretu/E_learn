@@ -11,6 +11,7 @@ import {
   Megaphone,
   Settings,
   Bell,
+  School,
   LogOut,
 } from "lucide-react";
 
@@ -66,7 +67,13 @@ const AdminLayout = ({ children }) => {
             <BarChart3 size={18} />
             Reports
           </NavLink>
-
+         <NavLink to="/admin/classes" className={({ isActive }) =>
+  `flex items-center gap-3 px-4 py-2 rounded-lg transition
+  ${isActive ? "bg-blue-600 text-white" : "hover:bg-white/10"}`
+}>
+  <School size={18} />
+  Class Management
+</NavLink>
           <NavLink to="/admin/announcements" className={({ isActive }) =>
             `flex items-center gap-3 px-4 py-2 rounded-lg transition
             ${isActive ? "bg-blue-600 text-white" : "hover:bg-white/10"}`
@@ -74,7 +81,7 @@ const AdminLayout = ({ children }) => {
             <Megaphone size={18} />
             Announcements
           </NavLink>
-
+          
           <NavLink to="/admin/settings" className={({ isActive }) =>
             `flex items-center gap-3 px-4 py-2 rounded-lg transition
             ${isActive ? "bg-blue-600 text-white" : "hover:bg-white/10"}`

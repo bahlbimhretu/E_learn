@@ -5,6 +5,7 @@ import Material from "../models/Material.js";
 import Lesson from "../models/Lesson.js";
 import User from "../models/Users.js";
 import CourseInstance from "../models/CourseInstance.js";
+import ClassRoom from "../models/ClassRoom.js";
 
 /**
  * GET /api/dashboard/student
@@ -49,14 +50,23 @@ export const getStudentDashboardStats = async (req, res) => {
 };
 
 /**
+ * import ClassRoom from "../models/ClassRoom.js";
+import CourseInstance from "../models/CourseInstance.js";
+import Lesson from "../models/Lesson.js";
+import User from "../models/Users.js";
+
+/**
  * GET /api/dashboard/teacher
- * protected -> teacher or admin
+ * protected -> teacher
  */
 export const getTeacherDashboardStats = async (req, res) => {
   try {
     const teacherId = req.user._id;
 
-    // 1️⃣ Teacher's active course instances
+    // ===============================
+    // 1️⃣ SUBJECT TEACHER DATA
+    // ===============================
+
     const courseInstances = await CourseInstance.find({
       teacher: teacherId,
       status: "active",
@@ -67,14 +77,12 @@ export const getTeacherDashboardStats = async (req, res) => {
 
     const classesCount = courseInstances.length;
 
-    // 2️⃣ Lessons uploaded by this teacher
     const lessonsCount = await Lesson.countDocuments({
       createdBy: teacherId,
     });
 
-    // 3️⃣ Unique students across all teacher classes
+    // Count unique students
     const studentSet = new Set();
-
     courseInstances.forEach((ci) => {
       ci.students.forEach((studentId) => {
         studentSet.add(studentId.toString());
@@ -83,7 +91,6 @@ export const getTeacherDashboardStats = async (req, res) => {
 
     const activeStudents = studentSet.size;
 
-    // 4️⃣ Recent classes (latest 3)
     const recentCourses = courseInstances.slice(0, 3).map((ci) => ({
       _id: ci._id,
       title: ci.courseTemplate?.title,
@@ -94,18 +101,74 @@ export const getTeacherDashboardStats = async (req, res) => {
       thumbnail: ci.courseTemplate?.thumbnail,
     }));
 
+    // ===============================
+    // 2️⃣ HOMEROOM DATA (MERGED)
+    // ===============================
+
+    const classRoom = await ClassRoom.findOne({
+      homeRoomTeacher: teacherId,
+      status: "active",
+    });
+
+    let homeroom = { isHomeroom: false };
+
+    if (classRoom) {
+      // Get students in homeroom
+      const students = await User.find({
+        role: "student",
+        status: "active",
+        "studentProfile.classRoom": classRoom._id,
+      }).select("_id");
+
+      const studentsCount = students.length;
+
+      // Get all course instances of this class
+      const classCourses = await CourseInstance.find({
+        classRoom: classRoom._id,
+        status: "active",
+      }).select("_id");
+
+      const courseIds = classCourses.map((c) => c._id);
+
+      const totalLessons = await Lesson.countDocuments({
+        courseInstance: { $in: courseIds },
+      });
+
+      homeroom = {
+  isHomeroom: true,
+  classInfo: {
+  _id: classRoom._id,   // ← THIS IS WHAT IS MISSING
+  grade: classRoom.grade,
+  section: classRoom.section,
+  academicYear: classRoom.academicYear,
+  studentsCount,
+},
+
+
+        totalCourses: classCourses.length,
+        lessonsCount: totalLessons,
+        attendanceRate: 0, // add real calculation later
+        lowPerformers: 0,  // add real calculation later
+      };
+    }
+
+    // ===============================
+    // FINAL RESPONSE
+    // ===============================
+
     res.json({
       classesCount,
       lessonsCount,
       activeStudents,
       recentCourses,
+      homeroom, // 🔥 THIS FIXES YOUR ISSUE
     });
+
   } catch (err) {
     console.error("Teacher dashboard error:", err);
     res.status(500).json({ message: err.message });
   }
 };
-
 
 
 /**

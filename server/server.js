@@ -26,6 +26,10 @@ import studentExerciseRoutes from "./routes/studentExerciseRoutes.js";
 import parentRoutes from "./routes/parentRoutes.js";
 import assignmentRoutes from "./routes/assignmentRoutes.js";
 import submissionRoutes from "./routes/submissionRoutes.js";
+import classRoomRoutes from "./routes/classRoomRoutes.js";
+import attendanceRoutes from "./routes/attendanceRoutes.js";
+import homeroomRoutes from "./routes/homeroomRoutes.js";
+import homeroomMessageRoutes from "./routes/homeroomMessageRoutes.js";
 dotenv.config();
 connectDB(); // <-- CONNECT DB FIRST
 
@@ -48,6 +52,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 // Course routes
 app.use("/api/courses", courseRoutes);
+app.use("/api/homeroom/messages", homeroomMessageRoutes);
+// Homeroom routes
+app.use("/api/homeroom", homeroomRoutes);
 //upload module
 app.use("/api/materials", materialRoutes);
 //lesson 
@@ -64,8 +71,10 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/announcements", announcementRoutes);
 // Admin User Management routes
 app.use("/api/admin/users", adminUserRoutes);
+//
 
 app.use("/api/admin", adminStudentRoutes);
+app.use("/api/classrooms", classRoomRoutes);
 //student routes
 app.use("/api/student", studentRoutes);
 app.use("/api/student", studentExerciseRoutes);
@@ -79,6 +88,7 @@ app.use("/api/quizzes", quizRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/submissions", submissionRoutes);
 
+app.use("/api/attendance", attendanceRoutes);
 app.use("/api/parent", parentRoutes);
 
 // Test routes

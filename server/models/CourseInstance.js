@@ -30,7 +30,10 @@ const courseInstanceSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-
+    classRoom: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ClassRoom",
+     },
     // 🔹 Enrolled students (snapshot)
     students: [
       {

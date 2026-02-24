@@ -43,70 +43,69 @@ export const registerUser = async (req, res) => {
     // =============================
     // STUDENT REGISTRATION
     // =============================
-    if (role === "student") {
-      if (!student || !parent) {
-        return res.status(400).json({
-          message: "Student and parent details are required",
-        });
-      }
+    // =============================
+// STUDENT REGISTRATION
+// =============================
+if (role === "student") {
+  if (!student || !student.classRoom || !parent) {
+    return res.status(400).json({
+      message: "Classroom and parent details are required",
+    });
+  }
 
-      // check parent email
-      const parentEmailExists = await User.findOne({ email: parent.email });
-      if (parentEmailExists) {
-        return res
-          .status(400)
-          .json({ message: "Parent email already exists" });
-      }
+  // check parent email
+  const parentEmailExists = await User.findOne({ email: parent.email });
+  if (parentEmailExists) {
+    return res
+      .status(400)
+      .json({ message: "Parent email already exists" });
+  }
 
-      // 1. CREATE PARENT
-      const parentUser = await User.create({
-  name: parent.name,
-  fatherName: "N/A",
-  grandFatherName: "N/A",
-  email: parent.email,
-  password: parent.password,
-  role: "parent",
-  parentProfile: {
-    phone: parent.phone,
-    children: [],
-  },
-})
-      // 2. CREATE STUDENT
-      const studentUser = await User.create({
-        name,
-        fatherName,
-        grandFatherName,
-        email,
-        password,
-        role: "student",
-        studentProfile: {
-          grade: student.grade,
-          section: student.section,
-          academicYear: student.academicYear,
-          guardian: parentUser._id,
-        },
-        parentProfile: {
-          phone: parent.phone,
-          children: [],
-        },
-      });
+  // 1️⃣ CREATE PARENT
+  const parentUser = await User.create({
+    name: parent.name,
+    fatherName: "N/A",
+    grandFatherName: "N/A",
+    email: parent.email,
+    password: parent.password,
+    role: "parent",
+    parentProfile: {
+      phone: parent.phone,
+      children: [],
+    },
+  });
 
-      // 3. LINK CHILD → PARENT
-      parentUser.parentProfile.children.push(studentUser._id);
-      await parentUser.save();
+  // 2️⃣ CREATE STUDENT
+  const studentUser = await User.create({
+    name,
+    fatherName,
+    grandFatherName,
+    email,
+    password,
+    role: "student",
+    studentProfile: {
+      classRoom: student.classRoom,   // ✅ NEW
+      academicYear: student.academicYear,
+      guardian: parentUser._id,
+    },
+  });
 
-      return res.status(201).json({
-        message: "Student and parent registered successfully",
-        student: {
-          id: studentUser._id,
-          name: studentUser.name,
-        },
-        parent: {
-          id: parentUser._id,
-          name: parentUser.name,
-        },
-      });
-    }
+  // 3️⃣ LINK CHILD → PARENT
+  parentUser.parentProfile.children.push(studentUser._id);
+  await parentUser.save();
+
+  return res.status(201).json({
+    message: "Student and parent registered successfully",
+    student: {
+      id: studentUser._id,
+      name: studentUser.name,
+    },
+    parent: {
+      id: parentUser._id,
+      name: parentUser.name,
+    },
+  });
+}
 
     // =============================
     // TEACHER REGISTRATION

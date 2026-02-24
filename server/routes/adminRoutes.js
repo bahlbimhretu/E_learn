@@ -29,8 +29,9 @@ import {
   getCourseInstanceById,
   updateCourseInstance,
   restoreCourseInstance,
+  
 } from "../controllers/adminCourseInstanceController.js";
-
+import { getClassRooms } from "../controllers/classRoomController.js";
 const router = express.Router();
 
 router.get("/stats", protect, authorize("admin"), getAdminStats);
@@ -136,6 +137,10 @@ router.put(
   authorize("admin"),
   updateCourseInstance
 );
+router.get("/classrooms", 
+  protect, authorize("admin"),
+getClassRooms
+  );
 export default router;
 
 

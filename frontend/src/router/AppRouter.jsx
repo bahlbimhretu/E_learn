@@ -31,6 +31,7 @@ import CourseInstanceForm from "../pages/admin/courseInstances/CourseInstanceFor
 import CourseInstanceDetail from "../pages/admin/courseInstances/CourseInstanceDetail";
 import AdminAnnouncements from "../pages/admin/announcement/Announcement.jsx";
 import AdminAnnouncementDetails from "../pages/admin/announcement/AdminAnnouncementDetails.jsx";
+import ClassManager from "../pages/admin/ClassManager.jsx";
 import CourseInstanceDetails from "../pages/teacher/CourseInstanceDetails.jsx";
 import MyCourseInstances from "../pages/teacher/MyCourseInstances.jsx";
 import MyCourses from "../pages/student/MyCourses.jsx";
@@ -45,6 +46,12 @@ import MarksPage from "../pages/teacher/MarksPage.jsx";
 import ParentAnnouncements from "../pages/materials/ParentAnnouncements.jsx";
 import TeacherCreateAssignment from "../pages/teacher/TeacherCreateAssignment.jsx";
 import TeacherSubmissionsPage from "../pages/teacher/TeacherSubmissionsPage.jsx";
+import HomeroomAttendance from "../pages/teacher/HomeroomAttendance.jsx";
+import MonthlyAttendanceReport from "../pages/teacher/MonthlyAttendanceReport.jsx";
+import HomeroomMessages from "../pages/teacher/HomeroomMessages.jsx";
+import ParentInbox from "../pages/parent/ParentInbox.jsx";
+import HomeroomPerformance from "../pages/teacher/HomeroomPerformance.jsx";
+import StudentReport from "../pages/teacher/StudentReport.jsx";
 
 export default function AppRouter() {
   return (
@@ -87,6 +94,17 @@ element={
 <ParentAnnouncements />
 </ProtectedRoute>}
  />
+ import ParentInbox from "../pages/parent/ParentInbox";
+
+<Route
+  path="/parent/inbox"
+  element={
+  <ProtectedRoute allowedRoles={["parent"]}>
+  <ParentInbox />
+  </ProtectedRoute>
+  }
+/>
+
 <Route
   path="/teacher/courses/:courseId/lessons/:lessonId/assignments/create"
   element=
@@ -94,6 +112,47 @@ element={
    <ProtectedRoute allowedRoles={["teacher"]}>
   <TeacherCreateAssignment />
 </ProtectedRoute>
+  }
+/>
+<Route
+  path="/teacher/homeroom/attendance/:classId"
+  element={
+    <ProtectedRoute allowedRoles={["teacher"]}>
+      <HomeroomAttendance />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/teacher/homeroom/performance"
+  element={
+  <ProtectedRoute allowedRoles={["teacher"]}>
+  <HomeroomPerformance />
+  </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/homeroom/attendance/report/:classId"
+  element={
+  <ProtectedRoute allowedRoles={["teacher"]}>
+  <MonthlyAttendanceReport />
+  </ProtectedRoute>
+  }
+/>
+<Route
+  path="/teacher/homeroom/messages/:classId"
+  element={
+  <ProtectedRoute allowedRoles={["teacher"]}>
+  <HomeroomMessages />
+  </ProtectedRoute>
+  }
+/>
+<Route
+  path="/teacher/homeroom/student/:studentId"
+  element={
+  <ProtectedRoute allowedRoles={["teacher"]}>
+  <StudentReport />
+  </ProtectedRoute>
   }
 />
 // Inside your Routes in App.jsx
@@ -128,6 +187,15 @@ element={
             </ProtectedRoute>
           }
         />
+       
+
+<Route 
+path="/admin/classes" 
+element={
+  <ProtectedRoute allowedRoles={["admin"]}>
+<ClassManager />
+  </ProtectedRoute>}
+ />
       <Route
   path="/student/exercise-quiz/:quizId"
   element={

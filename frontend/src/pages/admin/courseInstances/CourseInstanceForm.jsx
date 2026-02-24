@@ -13,12 +13,12 @@ const CourseInstanceForm = () => {
 
   const [templates, setTemplates] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  const [classRooms, setClassRooms] = useState([]);
 
   const [formData, setFormData] = useState({
     courseTemplateId: "",
     academicYear: "2024/2025",
-    grade: "",
-    section: "",
+    classRoomId: "",
     teacherId: "",
   });
 
@@ -26,15 +26,17 @@ const CourseInstanceForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [templatesRes, teachersRes] = await Promise.all([
+        const [templatesRes, teachersRes, classRes] = await Promise.all([
           api.get("/admin/course-templates"),
           api.get("/admin/teachers"),
+          api.get("/admin/classrooms"),
         ]);
 
         setTemplates(
           templatesRes.data.filter((t) => t.status !== "archived")
         );
         setTeachers(teachersRes.data);
+        setClassRooms(classRes.data);
       } catch (err) {
         console.error(err);
         setError("Failed to load form data");
@@ -55,9 +57,8 @@ const CourseInstanceForm = () => {
 
         setFormData({
           courseTemplateId: data.courseTemplate?._id || "",
-          academicYear: data.academicYear,
-          grade: data.grade,
-          section: data.section,
+          academicYear: data.academicYear || "",
+          classRoomId: data.classRoom?._id || "",
           teacherId: data.teacher?._id || "",
         });
       } catch (err) {
@@ -71,7 +72,7 @@ const CourseInstanceForm = () => {
     fetchInstance();
   }, [id, isEdit]);
 
-  /* ---------------- HANDLERS ---------------- */
+  /* ---------------- HANDLE CHANGE ---------------- */
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -79,13 +80,14 @@ const CourseInstanceForm = () => {
     });
   };
 
+  /* ---------------- SUBMIT ---------------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    const { courseTemplateId, academicYear, grade, section } = formData;
+    const { courseTemplateId, academicYear, classRoomId } = formData;
 
-    if (!courseTemplateId || !academicYear || !grade || !section) {
+    if (!courseTemplateId || !academicYear || !classRoomId) {
       setError("Please fill all required fields");
       return;
     }
@@ -116,7 +118,7 @@ const CourseInstanceForm = () => {
           {isEdit ? "Edit Course Instance" : "Create Course Instance"}
         </h1>
         <p className="text-sm text-gray-500 mb-6">
-          Bind a course template to a grade, section, and academic year
+          Bind a course template to a class and academic year
         </p>
 
         <form
@@ -150,7 +152,28 @@ const CourseInstanceForm = () => {
             </select>
           </div>
 
-          {/* TEACHER (OPTIONAL) */}
+          {/* CLASS ROOM */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Class Room
+            </label>
+            <select
+              name="classRoomId"
+              value={formData.classRoomId}
+              onChange={handleChange}
+              className="w-full border px-3 py-2 rounded"
+              required
+            >
+              <option value="">Select class</option>
+              {classRooms.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.grade} {c.section} ({c.academicYear})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* TEACHER */}
           <div>
             <label className="block text-sm font-medium mb-1">
               Teacher (optional)
@@ -184,47 +207,7 @@ const CourseInstanceForm = () => {
             />
           </div>
 
-          {/* GRADE & SECTION */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Grade
-              </label>
-              <select
-                name="grade"
-                value={formData.grade}
-                onChange={handleChange}
-                className="w-full border px-3 py-2 rounded"
-                required
-              >
-                <option value="">Select grade</option>
-                <option value="Grade 9">Grade 9</option>
-                <option value="Grade 10">Grade 10</option>
-                <option value="Grade 11">Grade 11</option>
-                <option value="Grade 12">Grade 12</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Section
-              </label>
-              <select
-                name="section"
-                value={formData.section}
-                onChange={handleChange}
-                className="w-full border px-3 py-2 rounded"
-                required
-              >
-                <option value="">Select section</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-              </select>
-            </div>
-          </div>
-
-          {/* ACTIONS */}
+          {/* ACTION BUTTONS */}
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"

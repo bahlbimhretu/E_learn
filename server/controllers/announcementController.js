@@ -9,7 +9,7 @@ import User from "../models/Users.js";
 export const getAnnouncements = async (req, res) => {
   try {
     const announcements = await Announcement.find()
-      .populate("createdBy", "name email role")
+      .populate("createdBy", "name email role avatar")
       .sort({ createdAt: -1 });
 
     res.json(announcements);
@@ -26,21 +26,21 @@ export const createAnnouncement = async (req, res) => {
   try {
     const { title, message, contentHtml, audience, status } = req.body;
 
-const announcement = await Announcement.create({
-  title,
-  contentHtml: contentHtml || message, // fallback
-  audience,
-  status,
-  createdBy: req.user._id,
-  creatorRole: req.user.role,
-  publishedAt: status === "published" ? new Date() : null,
-});
+    if (!title || !(contentHtml || message)) {
+      return res.status(400).json({
+        message: "Title and content are required",
+      });
+    }
 
-if (!title || !(contentHtml || message)) {
-  return res.status(400).json({
-    message: "Title and content are required",
-  });
-}
+    const announcement = await Announcement.create({
+      title,
+      contentHtml: contentHtml || message,
+      audience,
+      status,
+      createdBy: req.user._id,
+      creatorRole: req.user.role,
+      publishedAt: status === "published" ? new Date() : null,
+    });
 
     res.status(201).json(announcement);
   } catch (err) {
@@ -50,7 +50,6 @@ if (!title || !(contentHtml || message)) {
 
 /**
  * PUT /api/announcements/:id
- * Admin / Teacher: update announcement
  */
 export const updateAnnouncement = async (req, res) => {
   try {
@@ -60,7 +59,6 @@ export const updateAnnouncement = async (req, res) => {
       return res.status(404).json({ message: "Announcement not found" });
     }
 
-    // Optional: only creator or admin can edit
     if (
       req.user.role !== "admin" &&
       announcement.createdBy.toString() !== req.user._id.toString()
@@ -70,15 +68,11 @@ export const updateAnnouncement = async (req, res) => {
 
     Object.assign(announcement, req.body);
 
-    if (
-      req.body.status === "published" &&
-      !announcement.publishedAt
-    ) {
+    if (req.body.status === "published" && !announcement.publishedAt) {
       announcement.publishedAt = new Date();
     }
 
     await announcement.save();
-
     res.json(announcement);
   } catch (err) {
     res.status(400).json({ message: "Failed to update announcement" });
@@ -87,7 +81,6 @@ export const updateAnnouncement = async (req, res) => {
 
 /**
  * PATCH /api/announcements/:id/archive
- * Soft archive
  */
 export const archiveAnnouncement = async (req, res) => {
   try {
@@ -101,7 +94,6 @@ export const archiveAnnouncement = async (req, res) => {
     announcement.isArchived = true;
 
     await announcement.save();
-
     res.json({ message: "Announcement archived" });
   } catch (err) {
     res.status(500).json({ message: "Failed to archive announcement" });
@@ -110,11 +102,7 @@ export const archiveAnnouncement = async (req, res) => {
 
 /**
  * GET /api/announcements/feed
- * Student / Teacher / Parent
- */
-/**
- * GET /api/announcements/feed
- * Student / Teacher / Parent
+ * UPDATED: Now populates createdBy and selects creatorRole
  */
 export const getAnnouncementFeed = async (req, res) => {
   try {
@@ -123,22 +111,16 @@ export const getAnnouncementFeed = async (req, res) => {
     }
 
     const role = req.user.role;
-
     let grade = null;
     let section = null;
 
-    // If student → get grade/section
     if (role === "student") {
       grade = req.user.studentProfile?.grade;
       section = req.user.studentProfile?.section;
     }
 
-    // If parent → use first child (for now)
     if (role === "parent") {
-      const child = await User.findOne({
-        guardian: req.user._id,
-      });
-
+      const child = await User.findOne({ guardian: req.user._id });
       if (child) {
         grade = child.studentProfile?.grade;
         section = child.studentProfile?.section;
@@ -175,7 +157,10 @@ export const getAnnouncementFeed = async (req, res) => {
     })
       .sort({ publishedAt: -1 })
       .limit(50)
-      .select("title contentHtml publishedAt createdAt");
+      // POPULATE: Get name and avatar from the User model
+      .populate("createdBy", "name avatar")
+      // SELECT: Ensure we include createdBy and creatorRole
+      .select("title contentHtml publishedAt createdAt createdBy creatorRole");
 
     res.json(announcements);
   } catch (err) {
@@ -184,15 +169,13 @@ export const getAnnouncementFeed = async (req, res) => {
   }
 };
 
-
 /**
  * GET /api/announcements/:id
- * Admin / Teacher: get announcement details
  */
 export const getAnnouncementById = async (req, res) => {
   try {
     const announcement = await Announcement.findById(req.params.id)
-      .populate("createdBy", "name email role");
+      .populate("createdBy", "name email role avatar");
 
     if (!announcement) {
       return res.status(404).json({ message: "Announcement not found" });
@@ -203,4 +186,3 @@ export const getAnnouncementById = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch announcement" });
   }
 };
-

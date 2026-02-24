@@ -1,18 +1,13 @@
 import CourseInstance from "../models/CourseInstance.js";
 import CourseTemplate from "../models/CourseTemplate.js";
-import User from "../models/Users.js";
+import User from "../models/Users.js"
+import ClassRoom from "../models/ClassRoom.js";
 
 export const createCourseInstance = async (req, res) => {
   try {
-    const {
-      courseTemplateId,
-      academicYear,
-      grade,
-      section,
-      teacherId,
-    } = req.body;
+    const { courseTemplateId, academicYear, classRoomId, teacherId } = req.body;
 
-    if (!courseTemplateId || !academicYear || !grade || !section) {
+    if (!courseTemplateId || !academicYear || !classRoomId) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -21,38 +16,42 @@ export const createCourseInstance = async (req, res) => {
       return res.status(404).json({ message: "Course template not found" });
     }
 
-    // 🔹 Find matching students
+    const classRoom = await ClassRoom.findById(classRoomId);
+    if (!classRoom) {
+      return res.status(404).json({ message: "ClassRoom not found" });
+    }
+
+    // ✅ get students from classroom
     const students = await User.find({
       role: "student",
       status: "active",
-      "studentProfile.grade": grade,
-      "studentProfile.section": section,
-      "studentProfile.academicYear": academicYear,
+      "studentProfile.classRoom": classRoomId,
     }).select("_id");
 
-    // 🔹 Create OR update instance
-    const instance = await CourseInstance.findOneAndUpdate(
-      {
-        courseTemplate: courseTemplateId,
-        academicYear,
-        grade,
-        section,
-      },
-      {
-        $setOnInsert: {
-          teacher: teacherId || null,
-          createdBy: req.user._id,
-          status: "active",
-        },
-        $addToSet: {
-          students: { $each: students.map((s) => s._id) },
-        },
-      },
-      {
-        new: true,
-        upsert: true,
-      }
-    );
+    // ✅ prevent duplicate instance
+    const existing = await CourseInstance.findOne({
+      courseTemplate: courseTemplateId,
+      classRoom: classRoomId,
+      academicYear,
+    });
+
+    if (existing) {
+      return res.status(400).json({
+        message: "Course instance already exists for this class",
+      });
+    }
+
+    const instance = await CourseInstance.create({
+      courseTemplate: courseTemplateId,
+      academicYear,
+      classRoom: classRoomId,
+      teacher: teacherId || null,
+      grade: classRoom.grade,
+      section: classRoom.section,
+      students: students.map((s) => s._id),
+      createdBy: req.user._id,
+      status: "active",
+    });
 
     res.status(201).json(instance);
   } catch (error) {
@@ -66,6 +65,7 @@ export const getCourseInstances = async (req, res) => {
     const instances = await CourseInstance.find()
       .populate("courseTemplate", "name code thumbnail category")
       .populate("teacher", "name email")
+      .populate("classRoom", "grade section academicYear")
       .sort({ createdAt: -1 });
 
     res.json(instances);
@@ -124,6 +124,7 @@ export const getCourseInstanceById = async (req, res) => {
     const instance = await CourseInstance.findById(req.params.id)
       .populate("courseTemplate", "name code description")
       .populate("teacher", "name email")
+      .populate("classRoom", "grade section academicYear")
       .populate("students", "name email studentProfile");
 
     if (!instance) {
@@ -140,23 +141,35 @@ export const getCourseInstanceById = async (req, res) => {
 
 export const updateCourseInstance = async (req, res) => {
   try {
-    const {
-      courseTemplateId,
-      academicYear,
-      grade,
-      section,
-      teacherId,
-    } = req.body;
+    const { courseTemplateId, academicYear, classRoomId, teacherId } = req.body;
 
     const instance = await CourseInstance.findById(req.params.id);
     if (!instance) {
       return res.status(404).json({ message: "Course instance not found" });
     }
 
+    if (classRoomId) {
+      const classRoom = await ClassRoom.findById(classRoomId);
+      if (!classRoom) {
+        return res.status(404).json({ message: "ClassRoom not found" });
+      }
+
+      instance.classRoom = classRoomId;
+      instance.grade = classRoom.grade;
+      instance.section = classRoom.section;
+
+      // update students
+      const students = await User.find({
+        role: "student",
+        status: "active",
+        "studentProfile.classRoom": classRoomId,
+      }).select("_id");
+
+      instance.students = students.map((s) => s._id);
+    }
+
     instance.courseTemplate = courseTemplateId;
     instance.academicYear = academicYear;
-    instance.grade = grade;
-    instance.section = section;
     instance.teacher = teacherId || null;
 
     await instance.save();

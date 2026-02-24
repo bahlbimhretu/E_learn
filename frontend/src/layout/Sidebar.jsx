@@ -10,6 +10,7 @@ import {
   Upload,
   Bell,
   Settings,
+  MessageCircle,
 } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
 
@@ -36,6 +37,7 @@ const Sidebar = () => {
   { label: "Attendance", link: "/parent/attendance", icon: Users },
   { label: "Announcements", link: "/parent/announcements", icon: Bell },
   { label: "Profile / Settings", link: "/profile", icon: Settings },
+  { label: "Inbox", link: "/parent/inbox", icon: MessageCircle  },
 ],
 
     student: [
