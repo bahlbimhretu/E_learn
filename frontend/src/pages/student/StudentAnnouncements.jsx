@@ -10,8 +10,10 @@ const StudentAnnouncements = () => {
   useEffect(() => {
     const fetchFeed = async () => {
       try {
+        
         const res = await api.get("/announcements/feed");
         setAnnouncements(res.data);
+        console.log("API response:", res.data);
       } catch (err) {
         console.error("Announcement feed error:", err);
         setError("Failed to load announcements");

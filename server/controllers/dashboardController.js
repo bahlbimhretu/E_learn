@@ -11,44 +11,58 @@ import ClassRoom from "../models/ClassRoom.js";
  * GET /api/dashboard/student
  * protected -> student (any logged-in user)
  */
+
+
+// Add this to your imports at the top
+import { Announcement } from "../models/Announcement.js"; 
+
 export const getStudentDashboardStats = async (req, res) => {
   try {
     const studentId = req.user._id;
 
-    // totals
-    const totalCourses = await Course.countDocuments();
-    const enrolledCount = await Enrollment.countDocuments({ student: studentId });
+    // 1. Find instances where student is enrolled
+    const enrolledInstances = await CourseInstance.find({ 
+      students: studentId 
+    }).select("_id");
 
-    // Get the list of course ids student is enrolled in
-    const enrollments = await Enrollment.find({ student: studentId }).select("course");
-    const enrolledCourseIds = enrollments.map((e) => e.course);
+    const enrolledInstanceIds = enrolledInstances.map((inst) => inst._id);
 
-    // Count materials for student's enrolled courses (or all materials if not enrolled in any)
-    const materials = enrolledCourseIds.length
-      ? await Material.countDocuments({ course: { $in: enrolledCourseIds } })
-      : 0;
+    // 2. Run counts and fetch recent announcements in parallel
+    const [totalCourses, materials, lessons, recentAnnouncements] = await Promise.all([
+      CourseInstance.countDocuments({ status: "active" }),
+      
+      enrolledInstanceIds.length 
+        ? Material.countDocuments({ course: { $in: enrolledInstanceIds } }) 
+        : 0,
+        
+      enrolledInstanceIds.length 
+        ? Lesson.countDocuments({ course: { $in: enrolledInstanceIds } }) 
+        : 0,
 
-    // Count lessons in enrolled courses as proxy for "lessons"/"content"
-    const lessons = enrolledCourseIds.length
-      ? await Lesson.countDocuments({ course: { $in: enrolledCourseIds } })
-      : 0;
+      // Fetching the 3 most recent published announcements for students
+      Announcement.find({ 
+        status: "published", 
+        "audience.roles": "student",
+        isArchived: false 
+      })
+        .sort({ createdAt: -1 })
+        .limit(3)
+        .select("title createdAt") // Only grab what the frontend needs
+    ]);
 
-    // Recent courses (global recent)
-    const recentCourses = await Course.find().sort({ createdAt: -1 }).limit(3).select("title _id");
-
+    // 3. Return the data
     res.json({
       totalCourses,
-      enrolled: enrolledCount,
+      enrolled: enrolledInstanceIds.length,
       materials,
       lessons,
-      recentCourses,
+      recentAnnouncements, // Replaces recentCourses
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: err.message });
+    console.error("Dashboard Stats Error:", err);
+    res.status(500).json({ message: "Error loading dashboard data" });
   }
 };
-
 /**
  * import ClassRoom from "../models/ClassRoom.js";
 import CourseInstance from "../models/CourseInstance.js";

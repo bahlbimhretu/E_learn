@@ -1,12 +1,12 @@
 import User from "../models/Users.js";
-import Course from "../models/Course.js";
+import CourseInstance from "../models/CourseInstance.js";
 import Lesson from "../models/Lesson.js";
 import Material from "../models/Material.js";
-import Enrollment from "../models/Enrollment.js";
-import Grade from "../models/Grade.js";
 
 
-import bcrypt from "bcryptjs";
+
+
+
 
 export const getAllUsers = async (req, res) => {
   try {
@@ -58,16 +58,7 @@ export const deleteUser = async (req, res) => {
 };
 
 // controllers/adminController.js
-export const getGrades = async (req, res) => {
-  const grades = await Grade.find().sort({ name: 1 });
-  res.json(grades);
-};
-export const getSectionsByGrade = async (req, res) => {
-  const { gradeId } = req.query;
 
-  const sections = await Section.find({ grade: gradeId });
-  res.json(sections);
-};
 
 export const getAdminStats = async (req, res) => {
   try {
@@ -76,17 +67,16 @@ export const getAdminStats = async (req, res) => {
     const students = await User.countDocuments({ role: "student" });
     
 
-    const totalCourses = await Course.countDocuments();
+    const totalCourses = await CourseInstance.countDocuments();
     const totalLessons = await Lesson.countDocuments();
     const totalMaterials = await Material.countDocuments();
-    const enrollments = await Enrollment.countDocuments();
-
+  
     const recentUsers = await User.find()
       .sort({ createdAt: -1 })
       .limit(5)
       .select("-password");
 
-    const recentCourses = await Course.find()
+    const recentCourses = await CourseInstance.find()
       .sort({ createdAt: -1 })
       .limit(5)
       .populate("createdBy", "name email");
@@ -103,7 +93,7 @@ export const getAdminStats = async (req, res) => {
         totalLessons,
         totalMaterials,
       },
-      enrollments,
+     
       recentUsers,
       recentCourses,
     });

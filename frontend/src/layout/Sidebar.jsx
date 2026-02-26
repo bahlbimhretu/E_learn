@@ -3,13 +3,9 @@ import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
   BookOpen,
-  FileText,
   ClipboardList,
-  HelpCircle,
   Users,
-  Upload,
   Bell,
-  Settings,
   MessageCircle,
 } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
@@ -21,35 +17,23 @@ const Sidebar = () => {
     teacher: [
       { label: "Dashboard", link: "/teacher", icon: LayoutDashboard },
       { label: "My Courses", link: "/teacher/course-instances", icon: BookOpen },
-      { label: "Course Materials", link: "/teacher/materials", icon: FileText },
-      { label: "Assignments", link: "/teacher/assignments", icon: ClipboardList },
-      { label: "Quizzes", link: "/teacher/quizzes", icon: HelpCircle },
-      { label: "Attendance", link: "/teacher/attendance", icon: Users },
-     { label: "Mark Entry", link: "/teacher/marks", icon: ClipboardList },
       { label: "Announcements", link: "/teacher/announcements", icon: Bell },
-      { label: "Settings", link: "/settings", icon: Settings },
+      
     ],
     parent: [
   { label: "Dashboard", link: "/parent", icon: LayoutDashboard },
-  { label: "My Children", link: "/parent/children", icon: Users },
-  { label: "Progress Tracking", link: "/parent/progress", icon: BookOpen },
   { label: "Performance (Results)", link: "/parent/results", icon: ClipboardList },
   { label: "Attendance", link: "/parent/attendance", icon: Users },
   { label: "Announcements", link: "/parent/announcements", icon: Bell },
-  { label: "Profile / Settings", link: "/profile", icon: Settings },
   { label: "Inbox", link: "/parent/inbox", icon: MessageCircle  },
 ],
 
     student: [
       { label: "Dashboard", link: "/dashboard", icon: LayoutDashboard },
       { label: "My Courses", link: "/my-courses", icon: BookOpen },
-      { label: "Course Materials", link: "/my-materials", icon: FileText },
-      { label: "Assignments", link: "/my-assignments", icon: ClipboardList },
-      { label: "Quizzes", link: "/my-quizzes", icon: HelpCircle },
-      { label: "Grades & Feedback", link: "/my-grades", icon: Upload },
       { label: "Attendance", link: "/my-attendance", icon: Users },
       { label: "Announcements", link: "/student/announcements", icon: Bell },
-      { label: "Profile / Settings", link: "/profile", icon: Settings },
+      { label: "Results", link: "/student/results", icon: ClipboardList },
     ],
 
   

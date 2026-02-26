@@ -2,7 +2,7 @@ import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
 import { getAdminStats } from "../controllers/adminController.js";
-import { getGrades } from "../controllers/adminController.js";
+
 import { getTeachers } from "../controllers/adminUserControllers.js";
 import uploadCourseThumbnail from "../middleware/uploadCourseThumbnail.js";
 import {
@@ -35,7 +35,7 @@ import { getClassRooms } from "../controllers/classRoomController.js";
 const router = express.Router();
 
 router.get("/stats", protect, authorize("admin"), getAdminStats);
-router.get("/grades", protect, authorize("admin"), getGrades);
+
 router.get(
   "/teachers",
   protect,

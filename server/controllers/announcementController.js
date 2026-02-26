@@ -125,6 +125,7 @@ export const getAnnouncementFeed = async (req, res) => {
         grade = child.studentProfile?.grade;
         section = child.studentProfile?.section;
       }
+      
     }
 
     const baseQuery = {

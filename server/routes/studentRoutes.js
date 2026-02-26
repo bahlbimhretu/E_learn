@@ -5,6 +5,9 @@ import { authorize } from "../middleware/roleMiddleware.js";
 import { getStudentCourseInstances, getStudentCourseInstanceById } from "../controllers/student/studentCourseController.js";
 import { getStudentLessonsByCourse } from "../controllers/student/studentLessonController.js";
 import { getStudentCourseMarks } from "../controllers/getStudentCourseMarks.js";
+import { getStudentResults
+, getAvailableYears
+ } from "../controllers/studentResultController.js";
 const router = express.Router();
 
 router.get(
@@ -35,4 +38,14 @@ router.get(
   getStudentCourseMarks
 );
 
+router.get("/results", 
+  protect,
+  authorize("student"),
+  getStudentResults
+);
+
+ router.get("/results/years", 
+  protect,
+  authorize("student"), 
+  getAvailableYears);
 export default router;

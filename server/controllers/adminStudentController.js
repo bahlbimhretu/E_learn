@@ -1,11 +1,19 @@
+import mongoose from "mongoose";
 import User from "../models/Users.js";
+import ClassRoom from "../models/ClassRoom.js";
 
 /**
  * GET /admin/students
+ * Supports:
+ * - classRoom (recommended)
+ * - grade + section (fallback)
+ * - search
+ * - pagination
  */
 export const getStudents = async (req, res) => {
   try {
     const {
+      classRoom,
       grade,
       section,
       search,
@@ -13,19 +21,27 @@ export const getStudents = async (req, res) => {
       limit = 10,
     } = req.query;
 
-    if (!grade) {
-      return res.status(400).json({ message: "Grade is required" });
-    }
-
     const query = {
       role: "student",
-      "studentProfile.grade": grade,
     };
 
-    if (section) {
-      query["studentProfile.section"] = section;
+    // ✅ PRIORITY: Filter by ClassRoom
+    if (classRoom) {
+      if (!mongoose.Types.ObjectId.isValid(classRoom)) {
+        return res.status(400).json({ message: "Invalid ClassRoom ID" });
+      }
+
+      query["studentProfile.classRoom"] = classRoom;
+    }
+    // ✅ FALLBACK: grade + section
+    else if (grade) {
+      query["studentProfile.grade"] = grade;
+      if (section) {
+        query["studentProfile.section"] = section;
+      }
     }
 
+    // 🔎 Search by student name
     if (search) {
       query.name = { $regex: search, $options: "i" };
     }
@@ -37,7 +53,11 @@ export const getStudents = async (req, res) => {
         .select("-password -resetPasswordToken -resetPasswordExpire")
         .populate({
           path: "studentProfile.guardian",
-          select: "name parentProfile.phone",
+          select: "name email parentProfile.phone",
+        })
+        .populate({
+          path: "studentProfile.classRoom",
+          select: "academicYear grade section",
         })
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -64,36 +84,38 @@ export const getStudents = async (req, res) => {
 /**
  * GET /admin/students/:id
  */
-import mongoose from "mongoose";
-
 export const getStudentById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 🚨 HARD STOP
     if (!id || id === "undefined") {
-      return res.status(400).json({
-        message: "Student ID is required",
-      });
+      return res.status(400).json({ message: "Student ID is required" });
     }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        message: "Invalid Student ID format",
-      });
+      return res.status(400).json({ message: "Invalid Student ID format" });
     }
 
-    const student = await User.findById(id)
-  .populate({
-    path: "studentProfile.guardian",
-    select: "name email parentProfile.phone",
-  });
-
+    const student = await User.findOne({
+      _id: id,
+      role: "student",
+    })
+      .select("-password -resetPasswordToken -resetPasswordExpire")
+      .populate({
+        path: "studentProfile.guardian",
+        select: "name email parentProfile.phone",
+      })
+      .populate({
+        path: "studentProfile.classRoom",
+        select: "academicYear grade section homeRoomTeacher",
+        populate: {
+          path: "homeRoomTeacher",
+          select: "name email",
+        },
+      });
 
     if (!student) {
-      return res.status(404).json({
-        message: "Student not found",
-      });
+      return res.status(404).json({ message: "Student not found" });
     }
 
     res.json(student);
@@ -103,21 +125,26 @@ export const getStudentById = async (req, res) => {
   }
 };
 
-
 /**
  * PATCH /admin/students/:id/status
  */
 export const updateStudentStatus = async (req, res) => {
   try {
+    const { id } = req.params;
     const { status } = req.body;
 
     const allowed = ["active", "inactive", "suspended", "graduated"];
+
     if (!allowed.includes(status)) {
       return res.status(400).json({ message: "Invalid status value" });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid Student ID" });
+    }
+
     const student = await User.findOneAndUpdate(
-      { _id: req.params.id, role: "student" },
+      { _id: id, role: "student" },
       { status },
       { new: true }
     );
@@ -127,7 +154,7 @@ export const updateStudentStatus = async (req, res) => {
     }
 
     res.json({
-      message: "Student status updated",
+      message: "Student status updated successfully",
       status: student.status,
     });
   } catch (err) {

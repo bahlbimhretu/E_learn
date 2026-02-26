@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../../../api/axios";
 import { Plus, Pencil, Archive, Eye, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import QuillEditor from "../../../components/QuillEditor";
 
 /* ===========================================================
    AdminAnnouncements
@@ -186,7 +187,10 @@ const AnnouncementForm = ({ initialData, onClose, onSaved }) => {
   const [form, setForm] = useState({
     title: initialData?.title || "",
     contentHtml: initialData?.contentHtml || "",
-    audience: initialData?.audience || { roles: ["student", "teacher", "parent"] },
+    audience:
+      initialData?.audience || {
+        roles: ["student", "teacher", "parent"],
+      },
     status: initialData?.status || "draft",
   });
 
@@ -197,6 +201,12 @@ const AnnouncementForm = ({ initialData, onClose, onSaved }) => {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+
+    if (!form.title || !form.contentHtml) {
+      setError("Title and content are required");
+      setSubmitting(false);
+      return;
+    }
 
     try {
       if (initialData?._id) {
@@ -220,7 +230,7 @@ const AnnouncementForm = ({ initialData, onClose, onSaved }) => {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-      <div className="bg-white w-full max-w-lg rounded-xl shadow-lg p-6 space-y-5">
+      <div className="bg-white w-full max-w-2xl rounded-xl shadow-lg p-6 space-y-5 overflow-y-auto max-h-[90vh]">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">
             {initialData ? "Edit Announcement" : "New Announcement"}
@@ -239,11 +249,12 @@ const AnnouncementForm = ({ initialData, onClose, onSaved }) => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Title */}
           <div>
             <label className="text-sm font-medium">Title</label>
             <input
-              className="w-full border rounded-lg px-3 py-2"
+              className="w-full border rounded-lg px-3 py-2 mt-1"
               value={form.title}
               onChange={(e) =>
                 setForm({ ...form, title: e.target.value })
@@ -252,38 +263,76 @@ const AnnouncementForm = ({ initialData, onClose, onSaved }) => {
             />
           </div>
 
+          {/* Rich Text Editor */}
           <div>
-            <label className="text-sm font-medium">Message</label>
-            <textarea
-              className="w-full border rounded-lg px-3 py-2 h-32"
+            <label className="text-sm font-medium block mb-2">
+              Message
+            </label>
+            <QuillEditor
               value={form.contentHtml}
-              onChange={(e) =>
-                setForm({ ...form, contentHtml: e.target.value })
+              onChange={(html) =>
+                setForm({ ...form, contentHtml: html })
               }
-              required
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium">Status</label>
-              <select
-                className="w-full border rounded-lg px-3 py-2"
-                value={form.status}
-                onChange={(e) =>
-                  setForm({ ...form, status: e.target.value })
-                }
-              >
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-              </select>
+          {/* Audience */}
+          <div>
+            <label className="text-sm font-medium block mb-2">
+              Audience
+            </label>
+            <div className="flex gap-6">
+              {["student", "teacher", "parent"].map((role) => (
+                <label key={role} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={form.audience.roles.includes(role)}
+                    onChange={(e) => {
+                      let roles = [...form.audience.roles];
+
+                      if (e.target.checked) {
+                        roles.push(role);
+                      } else {
+                        roles = roles.filter((r) => r !== role);
+                      }
+
+                      setForm({
+                        ...form,
+                        audience: { ...form.audience, roles },
+                      });
+                    }}
+                  />
+                  <span className="capitalize">{role}</span>
+                </label>
+              ))}
             </div>
           </div>
 
+          {/* Status */}
+          <div>
+            <label className="text-sm font-medium">Status</label>
+            <select
+              className="w-full border rounded-lg px-3 py-2 mt-1"
+              value={form.status}
+              onChange={(e) =>
+                setForm({ ...form, status: e.target.value })
+              }
+            >
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </select>
+          </div>
+
+          {/* Buttons */}
           <div className="flex justify-end gap-3 pt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2"
+            >
               Cancel
             </button>
+
             <button
               type="submit"
               disabled={submitting}
@@ -292,7 +341,7 @@ const AnnouncementForm = ({ initialData, onClose, onSaved }) => {
               {submitting && (
                 <Loader2 className="w-4 h-4 animate-spin" />
               )}
-              Save Announcement
+              {initialData ? "Update Announcement" : "Save Announcement"}
             </button>
           </div>
         </form>

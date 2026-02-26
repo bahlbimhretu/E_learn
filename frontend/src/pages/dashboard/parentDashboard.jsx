@@ -2,22 +2,30 @@ import { useContext, useEffect, useState } from "react";
 import Layout from "../../layout/Layout";
 import { AuthContext } from "../../context/AuthContext";
 import api from "../../api/axios";
+import { AlertTriangle, BookOpen, CheckCircle, Percent } from "lucide-react";
+import { Link } from "react-router-dom";
 
 // 🔹 Reusable Stat Card
-const StatCard = ({ title, value, color }) => {
+const StatCard = ({ title, value, color, icon: Icon }) => {
   const colors = {
-    blue: "text-blue-600",
-    green: "text-green-600",
-    purple: "text-purple-600",
-    orange: "text-orange-600",
+    blue: "text-blue-600 bg-blue-50",
+    green: "text-green-600 bg-green-50",
+    purple: "text-purple-600 bg-purple-50",
+    orange: "text-orange-600 bg-orange-50",
+    red: "text-red-600 bg-red-50",
   };
 
   return (
-    <div className="bg-white p-5 rounded-xl shadow-sm border">
-      <p className="text-sm text-gray-500">{title}</p>
-      <p className={`text-2xl font-bold mt-2 ${colors[color]}`}>
-        {value ?? "--"}
-      </p>
+    <div className="bg-white p-5 rounded-xl shadow-sm border flex items-center gap-4">
+      <div className={`p-3 rounded-lg ${colors[color]}`}>
+        {Icon && <Icon size={24} />}
+      </div>
+      <div>
+        <p className="text-sm text-gray-500">{title}</p>
+        <p className={`text-2xl font-bold ${colors[color].split(' ')[0]}`}>
+          {value ?? "--"}
+        </p>
+      </div>
     </div>
   );
 };
@@ -29,6 +37,7 @@ const ParentDashboard = () => {
   const [selectedChild, setSelectedChild] = useState(null);
   const [overview, setOverview] = useState(null);
   const [performance, setPerformance] = useState([]);
+  const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // 🔹 Fetch children
@@ -37,33 +46,31 @@ const ParentDashboard = () => {
       try {
         const { data } = await api.get("/parent/children");
         setChildren(data);
-
-        if (data.length > 0) {
-          setSelectedChild(data[0]);
-        }
+        if (data.length > 0) setSelectedChild(data[0]);
       } catch (err) {
         console.error("Error fetching children", err);
       }
     };
-
     fetchChildren();
   }, []);
 
-  // 🔹 Fetch overview + performance when child changes
+  // 🔹 Fetch Child Data (Performance + Attendance)
   useEffect(() => {
     if (!selectedChild) return;
 
     const fetchChildData = async () => {
       try {
         setLoading(true);
-
-        const [overviewRes, performanceRes] = await Promise.all([
+        // Using your working attendance endpoint
+        const [overviewRes, performanceRes, attendanceRes] = await Promise.all([
           api.get(`/parent/${selectedChild._id}/overview`),
           api.get(`/parent/${selectedChild._id}/performance`),
+          api.get(`/attendance/parent/${selectedChild._id}`),
         ]);
 
         setOverview(overviewRes.data);
         setPerformance(performanceRes.data);
+        setAttendance(attendanceRes.data);
       } catch (err) {
         console.error("Error fetching child data", err);
       } finally {
@@ -74,130 +81,117 @@ const ParentDashboard = () => {
     fetchChildData();
   }, [selectedChild]);
 
-  // 🔹 Risk detection
-  const riskAlerts = [];
+  // 🔹 Logic: Calculate Attendance Rate
+  const attendanceRate = attendance.length > 0 
+    ? Math.round((attendance.filter(r => r.status === 'PRESENT').length / attendance.length) * 100)
+    : 100;
 
-  if (overview?.overallAverage < 60) {
-    riskAlerts.push("Overall performance is below passing level.");
-  }
+  // 🔹 Logic: Risk detection
+  const riskAlerts = [];
+  if (overview?.overallAverage < 60) riskAlerts.push("Academic performance is currently below passing grade.");
+  if (attendanceRate < 85 && attendance.length > 5) riskAlerts.push(`Attendance rate (${attendanceRate}%) is critically low.`);
+  
+  const recentAbsence = attendance.find(r => r.status === 'ABSENT');
+  if (recentAbsence) riskAlerts.push(`Unexcused absence recorded on ${new Date(recentAbsence.date).toLocaleDateString()}.`);
 
   return (
     <Layout>
-      <div>
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold">Parent Dashboard</h2>
-          <p className="text-gray-500 text-sm">
-            Welcome, {user?.name}
-          </p>
-        </div>
+        <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold">Parent Dashboard</h2>
+            <p className="text-gray-500 text-sm">Reviewing {selectedChild?.name}'s current standing</p>
+          </div>
 
-        {/* Child Selector */}
-        {children.length > 0 && (
-          <div className="mb-6">
-            <label className="text-sm text-gray-600 mr-3">
-              Select Child:
-            </label>
+          {children.length > 0 && (
             <select
               value={selectedChild?._id}
-              onChange={(e) =>
-                setSelectedChild(
-                  children.find(
-                    (child) => child._id === e.target.value
-                  )
-                )
-              }
-              className="border rounded px-3 py-2 text-sm bg-white"
+              onChange={(e) => setSelectedChild(children.find(c => c._id === e.target.value))}
+              className="border rounded-lg px-4 py-2 text-sm bg-white shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
             >
               {children.map((child) => (
-                <option key={child._id} value={child._id}>
-                  {child.name} (Grade {child.studentProfile?.grade} - {child.studentProfile?.section})
-                </option>
+                <option key={child._id} value={child._id}>{child.name}</option>
               ))}
             </select>
-          </div>
-        )}
+          )}
+        </div>
 
         {loading ? (
-          <p>Loading...</p>
+          <div className="flex items-center gap-2 text-gray-500"><Percent className="animate-spin" /> Synchronizing data...</div>
         ) : (
           <>
             {/* Overview Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-              <StatCard
-                title="Overall Average"
-                value={`${overview?.overallAverage ?? "--"}%`}
-                color="green"
-              />
-              <StatCard
-                title="Enrolled Courses"
-                value={overview?.enrolledCourses}
-                color="blue"
-              />
-              <StatCard
-                title="Subjects With Results"
-                value={overview?.subjectsCount}
-                color="purple"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <StatCard title="Grade Average" value={`${overview?.overallAverage ?? 0}%`} color="green" icon={CheckCircle} />
+              <StatCard title="Attendance Rate" value={`${attendanceRate}%`} color={attendanceRate < 85 ? "red" : "blue"} icon={Percent} />
+              <StatCard title="Total Courses" value={overview?.enrolledCourses} color="purple" icon={BookOpen} />
+              <StatCard title="Subjects Scored" value={overview?.subjectsCount} color="orange" icon={AlertTriangle} />
             </div>
 
             {/* Risk Alerts */}
             {riskAlerts.length > 0 && (
-              <div className="mb-8 space-y-3">
+              <div className="mb-8 space-y-2">
+                <h4 className="text-xs font-bold text-red-400 uppercase tracking-wider ml-1">Critical Alerts</h4>
                 {riskAlerts.map((alert, index) => (
-                  <div
-                    key={index}
-                    className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-lg text-sm"
-                  >
-                    ⚠ {alert}
+                  <div key={index} className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded flex items-center gap-3 text-sm shadow-sm">
+                    <AlertTriangle size={18} /> {alert}
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Performance Section */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border">
-              <h3 className="font-semibold mb-4">
-                Subject Performance
-              </h3>
-
-              {performance.length === 0 ? (
-                <p className="text-gray-500 text-sm">
-                  No results available yet.
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {performance.map((subject, idx) => (
-                    <div key={idx}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>{subject.subject}</span>
-                        <span
-                          className={
-                            subject.finalScore < 60
-                              ? "text-red-600 font-semibold"
-                              : "text-gray-700"
-                          }
-                        >
-                          {subject.finalScore}%
-                        </span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Performance Chart/Bars */}
+              <div className="bg-white p-6 rounded-xl shadow-sm border">
+                <h3 className="font-bold mb-6 text-gray-800">Subject Performance</h3>
+                {performance.length === 0 ? (
+                  <p className="text-gray-400 text-sm">No data available.</p>
+                ) : (
+                  <div className="space-y-5">
+                    {performance.map((subject, idx) => (
+                      <div key={idx}>
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="font-medium text-gray-700">{subject.subject}</span>
+                          <span className={`font-bold ${subject.finalScore < 60 ? "text-red-500" : "text-gray-600"}`}>{subject.finalScore}%</span>
+                        </div>
+                        <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full transition-all duration-500 ${subject.finalScore < 60 ? "bg-red-500" : "bg-blue-500"}`}
+                            style={{ width: `${subject.finalScore}%` }}
+                          />
+                        </div>
                       </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-                      <div className="w-full bg-gray-200 h-2 rounded">
-                        <div
-                          className={`h-2 rounded ${
-                            subject.finalScore < 60
-                              ? "bg-red-500"
-                              : "bg-blue-600"
-                          }`}
-                          style={{
-                            width: `${subject.finalScore}%`,
-                          }}
-                        />
+              {/* Attendance Mini-Log */}
+              <div className="bg-white p-6 rounded-xl shadow-sm border">
+                <h3 className="font-bold mb-6 text-gray-800">Recent Attendance</h3>
+                <div className="space-y-3">
+                  {attendance.slice(0, 5).map((record, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-gray-700">{new Date(record.date).toLocaleDateString()}</span>
+                        <span className="text-[10px] text-gray-400 uppercase">{record.type}</span>
                       </div>
+                      <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase border ${
+                        record.status === 'PRESENT' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200'
+                      }`}>
+                        {record.status}
+                      </span>
                     </div>
                   ))}
+                 <Link
+  to="/parent/attendance"
+  className="w-full text-center text-blue-500 text-xs font-bold mt-4 hover:underline block"
+>
+  View Full Attendance Report →
+</Link>
                 </div>
-              )}
+              </div>
             </div>
           </>
         )}

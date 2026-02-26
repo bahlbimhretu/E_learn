@@ -197,3 +197,34 @@ export const getMonthlyAttendanceReport = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+// controllers/attendanceController.js
+export const getParentViewData = async (req, res) => {
+  try {
+    const { studentId } = req.params; // Get ID from the URL segment
+
+    // Optional: Security check to ensure the parent is authorized to see THIS student
+    // const parent = await User.findById(req.user._id);
+    // if (!parent.parentProfile.children.includes(studentId)) { return res.status(403)... }
+
+    const records = await AttendanceRecord.find({ student: studentId })
+      .populate({
+        path: "attendanceSession",
+        select: "sessionDate sessionType periodNumber"
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const formattedData = records.map(rec => ({
+      id: rec._id,
+      date: rec.attendanceSession?.sessionDate,
+      type: rec.attendanceSession?.sessionType,
+      status: rec.status,
+      remark: rec.remark,
+      period: rec.attendanceSession?.periodNumber
+    }));
+
+    res.status(200).json(formattedData);
+  } catch (error) {
+    res.status(500).json({ message: "Error", error: error.message });
+  }
+};

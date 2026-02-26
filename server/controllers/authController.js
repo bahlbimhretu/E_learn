@@ -5,9 +5,17 @@ import crypto from "crypto";
 import generateResetToken from "../utils/generateResetToken.js";
 import { sendEmail } from "../utils/sendEmail.js";
 
-// ===============================
-// REGISTER USER (ADMIN ONLY)
-// ===============================
+/* =====================================================
+   🔐 HELPER: GENERATE SECURE RANDOM PASSWORD
+===================================================== */
+const generateRandomPassword = () => {
+  return crypto.randomBytes(6).toString("hex"); 
+  // 12-character secure password
+};
+
+/* =====================================================
+   🟢 REGISTER USER (ADMIN ONLY)
+===================================================== */
 export const registerUser = async (req, res) => {
   try {
     const {
@@ -16,17 +24,15 @@ export const registerUser = async (req, res) => {
       fatherName,
       grandFatherName,
       email,
-      password,
-
       student,
       parent,
       teacher,
     } = req.body;
 
-    // -----------------------------
+    // =============================
     // BASIC VALIDATION
-    // -----------------------------
-    if (!role || !name || !email || !password) {
+    // =============================
+    if (!role || !name || !email) {
       return res.status(400).json({ message: "Required fields missing" });
     }
 
@@ -40,76 +46,95 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Email already exists" });
     }
 
-    // =============================
-    // STUDENT REGISTRATION
-    // =============================
-    // =============================
-// STUDENT REGISTRATION
-// =============================
-if (role === "student") {
-  if (!student || !student.classRoom || !parent) {
-    return res.status(400).json({
-      message: "Classroom and parent details are required",
-    });
-  }
+    /* =====================================================
+       🎓 STUDENT REGISTRATION (WITH PARENT CREATION)
+    ===================================================== */
+    if (role === "student") {
+      if (!student || !student.classRoom || !parent) {
+        return res.status(400).json({
+          message: "Classroom and parent details are required",
+        });
+      }
 
-  // check parent email
-  const parentEmailExists = await User.findOne({ email: parent.email });
-  if (parentEmailExists) {
-    return res
-      .status(400)
-      .json({ message: "Parent email already exists" });
-  }
+      const parentEmailExists = await User.findOne({ email: parent.email });
+      if (parentEmailExists) {
+        return res
+          .status(400)
+          .json({ message: "Parent email already exists" });
+      }
 
-  // 1️⃣ CREATE PARENT
-  const parentUser = await User.create({
-    name: parent.name,
-    fatherName: "N/A",
-    grandFatherName: "N/A",
-    email: parent.email,
-    password: parent.password,
-    role: "parent",
-    parentProfile: {
-      phone: parent.phone,
-      children: [],
-    },
-  });
+      const studentPassword = generateRandomPassword();
+      const parentPassword = generateRandomPassword();
 
-  // 2️⃣ CREATE STUDENT
-  const studentUser = await User.create({
-    name,
-    fatherName,
-    grandFatherName,
-    email,
-    password,
-    role: "student",
-    studentProfile: {
-      classRoom: student.classRoom,   // ✅ NEW
-      academicYear: student.academicYear,
-      guardian: parentUser._id,
-    },
-  });
+      // 1️⃣ CREATE PARENT
+      const parentUser = await User.create({
+        name: parent.name,
+        fatherName: "N/A",
+        grandFatherName: "N/A",
+        email: parent.email,
+        password: parentPassword,
+        role: "parent",
+        parentProfile: {
+          phone: parent.phone,
+          children: [],
+        },
+      });
 
-  // 3️⃣ LINK CHILD → PARENT
-  parentUser.parentProfile.children.push(studentUser._id);
-  await parentUser.save();
+      // 2️⃣ CREATE STUDENT
+      const studentUser = await User.create({
+        name,
+        fatherName,
+        grandFatherName,
+        email,
+        password: studentPassword,
+        role: "student",
+        studentProfile: {
+          classRoom: student.classRoom,
+          academicYear: student.academicYear,
+          guardian: parentUser._id,
+        },
+      });
 
-  return res.status(201).json({
-    message: "Student and parent registered successfully",
-    student: {
-      id: studentUser._id,
-      name: studentUser.name,
-    },
-    parent: {
-      id: parentUser._id,
-      name: parentUser.name,
-    },
-  });
-}
+      // 3️⃣ LINK CHILD TO PARENT
+      parentUser.parentProfile.children.push(studentUser._id);
+      await parentUser.save();
 
-    // =============================
-    // TEACHER REGISTRATION
-    // =============================
+      // 📧 SEND EMAILS
+      await sendEmail({
+        email: studentUser.email,
+        subject: "Your LMS Student Account",
+        message: `
+          <h2>Welcome to Tsinseta LMS</h2>
+          <p>Hello ${studentUser.name},</p>
+          <p>Your student account has been created.</p>
+          <p><strong>Email:</strong> ${studentUser.email}</p>
+          <p><strong>Temporary Password:</strong> ${studentPassword}</p>
+          <p>Please login and change your password immediately.</p>
+        `,
+      });
+
+      await sendEmail({
+        email: parentUser.email,
+        subject: "Your LMS Parent Account",
+        message: `
+          <h2>Welcome to Tsinseta LMS</h2>
+          <p>Hello ${parentUser.name},</p>
+          <p>Your parent account has been created.</p>
+          <p><strong>Email:</strong> ${parentUser.email}</p>
+          <p><strong>Temporary Password:</strong> ${parentPassword}</p>
+          <p>Please login and change your password immediately.</p>
+        `,
+      });
+
+      return res.status(201).json({
+        message:
+          "Student and parent registered successfully. Credentials sent via email.",
+      });
+    }
+
+    /* =====================================================
+       👨‍🏫 TEACHER REGISTRATION
+    ===================================================== */
     if (role === "teacher") {
       if (!teacher) {
         return res.status(400).json({
@@ -117,12 +142,14 @@ if (role === "student") {
         });
       }
 
+      const teacherPassword = generateRandomPassword();
+
       const teacherUser = await User.create({
         name,
         fatherName,
         grandFatherName,
         email,
-        password,
+        password: teacherPassword,
         role: "teacher",
         teacherProfile: {
           specialization: teacher.specialization,
@@ -131,34 +158,55 @@ if (role === "student") {
         },
       });
 
+      await sendEmail({
+        email: teacherUser.email,
+        subject: "Your LMS Teacher Account",
+        message: `
+          <h2>Welcome to Tsinseta LMS</h2>
+          <p>Hello ${teacherUser.name},</p>
+          <p>Your teacher account has been created.</p>
+          <p><strong>Email:</strong> ${teacherUser.email}</p>
+          <p><strong>Temporary Password:</strong> ${teacherPassword}</p>
+          <p>Please login and change your password immediately.</p>
+        `,
+      });
+
       return res.status(201).json({
-        message: "Teacher registered successfully",
-        user: {
-          id: teacherUser._id,
-          name: teacherUser.name,
-          role: teacherUser.role,
-        },
+        message:
+          "Teacher registered successfully. Credentials sent via email.",
       });
     }
 
-    // =============================
-    // ADMIN / PARENT REGISTRATION
-    // =============================
+    /* =====================================================
+       🟣 ADMIN OR DIRECT PARENT REGISTRATION
+    ===================================================== */
+    const generatedPassword = generateRandomPassword();
+
     const user = await User.create({
       name,
       fatherName,
       grandFatherName,
       email,
-      password,
+      password: generatedPassword,
       role,
     });
 
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
+    await sendEmail({
       email: user.email,
-      role: user.role,
-      token: generateToken(user._id),
+      subject: "Your LMS Account",
+      message: `
+        <h2>Welcome to Tsinseta LMS</h2>
+        <p>Hello ${user.name},</p>
+        <p>Your account has been created.</p>
+        <p><strong>Email:</strong> ${user.email}</p>
+        <p><strong>Temporary Password:</strong> ${generatedPassword}</p>
+        <p>Please login and change your password immediately.</p>
+      `,
+    });
+
+    res.status(201).json({
+      message:
+        "User registered successfully. Credentials sent via email.",
     });
   } catch (err) {
     console.error("REGISTER ERROR:", err);
@@ -166,17 +214,18 @@ if (role === "student") {
   }
 };
 
-
-// ===============================
-// LOGIN USER
-// ===============================
+/* =====================================================
+   🔑 LOGIN USER
+===================================================== */
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "User not found" });
-    const correct = await user.matchPassword(password);
 
+    const user = await User.findOne({ email });
+    if (!user)
+      return res.status(400).json({ message: "User not found" });
+
+    const correct = await user.matchPassword(password);
     if (!correct)
       return res.status(400).json({ message: "Invalid password" });
 
@@ -192,61 +241,54 @@ export const loginUser = async (req, res) => {
   }
 };
 
-
-// ===============================
-// FORGOT PASSWORD
-// ===============================
+/* =====================================================
+   🔁 FORGOT PASSWORD
+===================================================== */
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
     const user = await User.findOne({ email });
     if (!user)
-      return res.status(404).json({ message: "User with this email not found" });
+      return res.status(404).json({
+        message: "User with this email not found",
+      });
 
-    // Generate reset token
     const { resetToken, hashed } = generateResetToken();
 
     user.resetPasswordToken = hashed;
-    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // valid 10 mins
-   await user.save({ validateBeforeSave: false });
+    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
 
+    await user.save({ validateBeforeSave: false });
 
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
-
-    const message = `
-      <h3>Password Reset Request</h3>
-      <p>You requested a password reset.</p>
-      <p>Click the link below to set a new password:</p>
-      <a href="${resetUrl}" target="_blank">${resetUrl}</a>
-      <br/><br/>
-      <p>This link is valid for <strong>10 minutes</strong>.</p>
-    `;
 
     await sendEmail({
       email: user.email,
       subject: "Password Reset Link",
-      message,
+      message: `
+        <h3>Password Reset Request</h3>
+        <p>Click the link below to reset your password:</p>
+        <a href="${resetUrl}" target="_blank">${resetUrl}</a>
+        <p>This link is valid for 10 minutes.</p>
+      `,
     });
 
-    res.json({ message: "Password reset link sent to your email." });
-
+    res.json({ message: "Password reset link sent." });
   } catch (err) {
     console.error("FORGOT PASSWORD ERROR:", err);
     res.status(500).json({ message: err.message });
   }
 };
 
-
-// ===============================
-// RESET PASSWORD
-// ===============================
+/* =====================================================
+   🔄 RESET PASSWORD
+===================================================== */
 export const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
     const { password } = req.body;
 
-    // hash provided token to compare with DB
     const hashed = crypto
       .createHash("sha256")
       .update(token)
@@ -258,16 +300,19 @@ export const resetPassword = async (req, res) => {
     });
 
     if (!user)
-      return res.status(400).json({ message: "Invalid or expired token" });
+      return res.status(400).json({
+        message: "Invalid or expired token",
+      });
 
-    // Update password
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
 
     await user.save();
 
-    res.json({ message: "Password reset successful. You can now login." });
+    res.json({
+      message: "Password reset successful. You can now login.",
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

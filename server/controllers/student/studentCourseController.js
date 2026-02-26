@@ -4,15 +4,22 @@ export const getStudentCourseInstances = async (req, res) => {
   try {
     const student = req.user;
 
-    if (!student.studentProfile) {
+    if (!student || !student.studentProfile) {
       return res.status(400).json({ message: "Student profile not found" });
     }
 
-    const { grade, section, academicYear } = student.studentProfile;
+    // ✅ FIX: Extract from studentProfile, but fallback to classRoom object
+    const { academicYear, classRoom } = student.studentProfile;
+    
+    // We try to get grade/section from the profile directly, 
+    // or from the populated classRoom object.
+    const grade = student.studentProfile.grade || classRoom?.grade;
+    const section = student.studentProfile.section || classRoom?.section;
 
     if (!grade || !section || !academicYear) {
       return res.status(400).json({
         message: "Incomplete student profile (grade, section, academicYear required)",
+        received: { grade, section, academicYear } // Useful for debugging
       });
     }
 
@@ -24,7 +31,6 @@ export const getStudentCourseInstances = async (req, res) => {
     })
       .populate({
         path: "courseTemplate",
-        // 🔴 CHANGE HERE ONLY
         select: "name thumbnail description",
       })
       .populate({
@@ -38,12 +44,9 @@ export const getStudentCourseInstances = async (req, res) => {
       grade: course.grade,
       section: course.section,
       academicYear: course.academicYear,
-
-      // 🔴 CHANGE HERE ONLY
       courseName: course.courseTemplate?.name,
-      thumbnail: course.courseTemplate?.thumbnail, // UNCHANGED
+      thumbnail: course.courseTemplate?.thumbnail,
       teacherName: course.teacher?.name || "Unknown",
-
       createdAt: course.createdAt,
     }));
 
@@ -59,7 +62,14 @@ export const getStudentCourseInstanceById = async (req, res) => {
     const student = req.user;
     const { id } = req.params;
 
-    const { grade, section, academicYear } = student.studentProfile || {};
+    if (!student || !student.studentProfile) {
+      return res.status(400).json({ message: "Student profile not found" });
+    }
+
+    // ✅ FIX: Extract from studentProfile fallback to classRoom
+    const { academicYear, classRoom } = student.studentProfile;
+    const grade = student.studentProfile.grade || classRoom?.grade;
+    const section = student.studentProfile.section || classRoom?.section;
 
     if (!grade || !section || !academicYear) {
       return res.status(400).json({ message: "Incomplete student profile" });
@@ -74,7 +84,6 @@ export const getStudentCourseInstanceById = async (req, res) => {
     })
       .populate({
         path: "courseTemplate",
-        // 🔴 CHANGE HERE ONLY
         select: "name thumbnail description",
       })
       .populate({
@@ -90,11 +99,10 @@ export const getStudentCourseInstanceById = async (req, res) => {
 
     res.json({
       _id: course._id,
-      // 🔴 CHANGE HERE ONLY
       courseName: course.courseTemplate?.name,
       description: course.courseTemplate?.description,
-      thumbnail: course.courseTemplate?.thumbnail, // UNCHANGED
-      teacherName: course.teacher?.name,
+      thumbnail: course.courseTemplate?.thumbnail,
+      teacherName: course.teacher?.name || "Unknown",
       grade: course.grade,
       section: course.section,
       academicYear: course.academicYear,

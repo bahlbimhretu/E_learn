@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom"; // Added for navigation
 import api from "../../api/axios";
 import Layout from "../../layout/Layout";
 
@@ -34,19 +35,34 @@ const Dashboard = () => {
         <Card label="Lessons" value={stats.lessons} color="bg-red-500" />
       </div>
 
+      {/* --- RECENT ANNOUNCEMENTS SECTION --- */}
       <div className="mt-10 bg-white p-6 rounded-xl shadow">
-        <h2 className="text-xl font-bold mb-4">Recent Courses</h2>
-        <ul className="space-y-3">
-          {stats.recentCourses?.length ? (
-            stats.recentCourses.map((c) => (
-              <li key={c._id} className="p-4 bg-gray-50 rounded border">
-                {c.title}
-              </li>
+        <h2 className="text-xl font-bold mb-4">Recent Announcements</h2>
+        <div className="space-y-3">
+          {stats.recentAnnouncements?.length ? (
+            stats.recentAnnouncements.map((announcement) => (
+              <div 
+                key={announcement._id} 
+                className="p-4 bg-gray-50 rounded border flex justify-between items-center hover:bg-gray-100 transition-colors"
+              >
+                <div>
+                  <h3 className="font-semibold text-gray-800">{announcement.title}</h3>
+                  <p className="text-sm text-gray-500">
+                    {new Date(announcement.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <Link 
+                  to={`/student/announcements`} 
+                  className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                >
+                  GO TO ANNOUNCEMENT
+                </Link>
+              </div>
             ))
           ) : (
-            <li>No recent courses</li>
+            <p className="text-gray-500 italic">No recent announcements</p>
           )}
-        </ul>
+        </div>
       </div>
     </Layout>
   );

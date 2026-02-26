@@ -52,6 +52,9 @@ import HomeroomMessages from "../pages/teacher/HomeroomMessages.jsx";
 import ParentInbox from "../pages/parent/ParentInbox.jsx";
 import HomeroomPerformance from "../pages/teacher/HomeroomPerformance.jsx";
 import StudentReport from "../pages/teacher/StudentReport.jsx";
+import EditLesson from "../pages/lessons/EditLesson.jsx";
+import ParentAttendance from "../pages/parent/AttendancePage.jsx";
+import StudentResultPage from "../pages/student/StudentResultPage.jsx";
 
 export default function AppRouter() {
   return (
@@ -82,6 +85,20 @@ export default function AppRouter() {
     </ProtectedRoute>
   }
 />
+<Route
+  path="/parent/attendance" 
+  element={ 
+    <ProtectedRoute allowedRoles={["parent"]}>
+      <ParentAttendance />
+    </ProtectedRoute>
+  }
+/>
+<Route path="/student/results"
+element={
+  <ProtectedRoute allowedRoles={["student"]}>
+<StudentResultPage />
+</ProtectedRoute>
+} />
 <Route path="/parent/results" 
 element={
   <ProtectedRoute allowedRoles={["parent"]}>
@@ -275,6 +292,14 @@ element={
     <ProtectedRoute allowedRoles={["teacher", "admin"]}>
       <LessonsList />
     </ProtectedRoute>
+  }
+/>
+<Route
+  path="/teacher/courses/:courseId/lessons/edit/:lessonId"
+  element={
+  <ProtectedRoute allowedRoles={["teacher", "admin"]}>
+  <EditLesson />
+  </ProtectedRoute> 
   }
 />
 <Route

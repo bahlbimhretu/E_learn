@@ -1,28 +1,32 @@
-import { useEffect, useState, useContext } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import api from "../../api/axios";
-import { AuthContext } from "../../context/AuthContext";
 import AdminLayout from "../../layout/AdminLayout";
 import {
   Users,
+  UserCheck,
+  GraduationCap,
   BookOpen,
   Layers,
+  FileText,
   AlertCircle,
 } from "lucide-react";
 
-const OverviewCard = ({ title, value, subtitle, icon: Icon, iconColor }) => (
-  <div className="bg-white border rounded-xl p-5 flex justify-between">
+/* ================= REUSABLE STAT CARD ================= */
+const StatCard = ({ title, value, icon: Icon, iconColor }) => (
+  <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 flex justify-between items-center hover:shadow-md transition">
     <div>
-      <p className="text-sm font-medium text-gray-600">{title}</p>
-      <h2 className="text-2xl font-bold mt-1">{value}</h2>
-      <p className="text-sm text-gray-400 mt-1">{subtitle}</p>
+      <p className="text-sm text-gray-500 font-medium">{title}</p>
+      <h2 className="text-3xl font-bold mt-2">{value}</h2>
     </div>
-    <Icon className={`w-6 h-6 ${iconColor}`} />
+
+    <div className="p-3 rounded-xl bg-gray-50">
+      <Icon className={`w-7 h-7 ${iconColor}`} />
+    </div>
   </div>
 );
 
+/* ================= DASHBOARD ================= */
 const AdminDashboard = () => {
-  const { user } = useContext(AuthContext);
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
@@ -35,116 +39,90 @@ const AdminDashboard = () => {
         });
         setStats(res.data);
       } catch (err) {
-        console.log("Admin Stats Error:", err);
+        console.error("Admin Stats Error:", err);
       }
     };
+
     fetchStats();
   }, []);
 
   if (!stats) {
     return (
       <AdminLayout>
-        <div>Loading dashboard...</div>
+        <div className="p-6">Loading dashboard...</div>
       </AdminLayout>
     );
   }
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="p-6 bg-gray-50 min-h-screen space-y-8">
 
-        {/* SYSTEM OVERVIEW */}
-        <section className="space-y-6">
+        {/* ================= HEADER ================= */}
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Admin Dashboard
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            System statistics overview
+          </p>
+        </div>
 
-          {/* Title */}
-          <div>
-            <h1 className="text-2xl font-bold">System Overview</h1>
-            <p className="text-gray-500 text-sm">
-              Comprehensive view of your LMS system
-            </p>
-          </div>
+        {/* ================= USER OVERVIEW ================= */}
+        <div>
+          <h2 className="text-lg font-semibold mb-4">User Overview</h2>
 
-          {/* TOP SUMMARY CARDS */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-            <OverviewCard
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <StatCard
               title="Total Users"
               value={stats.users.total}
-              subtitle={`Students: ${stats.users.students} • Teachers: ${stats.users.teachers}`}
               icon={Users}
               iconColor="text-blue-600"
             />
 
-            <OverviewCard
-              title="Active Courses"
-              value={stats.courses.total}
-              subtitle="Currently running"
-              icon={BookOpen}
+            <StatCard
+              title="Students"
+              value={stats.users.students}
+              icon={GraduationCap}
+              iconColor="text-indigo-600"
+            />
+
+            <StatCard
+              title="Teachers"
+              value={stats.users.teachers}
+              icon={UserCheck}
               iconColor="text-green-600"
             />
-            
-            <OverviewCard
-              title="Active Classes"
-              value={stats.enrollments}
-              subtitle="This academic year"
-              icon={Layers}
+          </div>
+        </div>
+
+        {/* ================= ACADEMIC OVERVIEW ================= */}
+        <div>
+          <h2 className="text-lg font-semibold mb-4">Academic Overview</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <StatCard
+              title="Total Courses"
+              value={stats.courses.total}
+              icon={BookOpen}
               iconColor="text-purple-600"
             />
 
-            <OverviewCard
-              title="Pending Actions"
-              value={stats.pending || 0}
-              subtitle="Require attention"
-              icon={AlertCircle}
-              iconColor="text-red-600"
+            <StatCard
+              title="Total Lessons"
+              value={stats.courses.totalLessons}
+              icon={Layers}
+              iconColor="text-orange-600"
+            />
+
+            <StatCard
+              title="Total Materials"
+              value={stats.courses.totalMaterials}
+              icon={FileText}
+              iconColor="text-pink-600"
             />
           </div>
-
-          {/* SECOND ROW */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-            {/* STUDENTS */}
-            <div className="bg-white border rounded-xl p-5">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-semibold">Students</h3>
-                <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">
-                  Active
-                </span>
-              </div>
-              <p className="text-2xl font-bold">{stats.users.students}</p>
-              <p className="text-sm text-gray-500 mt-2">
-                Grade 9 • Grade 10 • Grade 11 • Grade 12
-              </p>
-            </div>
-
-            {/* TEACHERS */}
-            <div className="bg-white border rounded-xl p-5">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-semibold">Teachers</h3>
-                <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded-full">
-                  Active
-                </span>
-              </div>
-              <p className="text-2xl font-bold">{stats.users.teachers}</p>
-              <p className="text-sm text-gray-500 mt-2">
-                Full-time & Part-time
-              </p>
-            </div>
-
-            {/* SYSTEM ACTIVITY */}
-            <div className="bg-white border rounded-xl p-5">
-              <h3 className="font-semibold mb-3">System Activity</h3>
-              <p className="text-sm text-gray-600">
-                Today’s Logins
-              </p>
-              <p className="text-xl font-bold">287 users</p>
-            </div>
-          </div>
-
-          {/* RECENT SYSTEM ACTIVITY */}
-          
-
-        </section>
-
+        </div>
       </div>
     </AdminLayout>
   );

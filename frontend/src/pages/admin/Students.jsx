@@ -2,26 +2,45 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import AdminLayout from "../../layout/AdminLayout";
 import { Search, Eye } from "lucide-react";
-
 import { useNavigate } from "react-router-dom";
-
-
-
-const GRADES = ["Grade 9", "Grade 10", "Grade 11", "Grade 12"];
-const SECTIONS = ["A", "B", "C", "D"];
 
 const Students = () => {
   const [students, setStudents] = useState([]);
-  const [grade, setGrade] = useState("");
-  const [section, setSection] = useState("");
+  const [classRooms, setClassRooms] = useState([]);
+  const [selectedClassRoom, setSelectedClassRoom] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(null);
+
   const navigate = useNavigate();
+
+  // ✅ Load ClassRooms
   useEffect(() => {
-    if (!grade) {
+  const fetchClassRooms = async () => {
+    try {
+      const res = await api.get("/admin/classrooms");
+
+      console.log("Classroom API response:", res.data);
+
+      // ✅ Your backend returns plain array
+      if (Array.isArray(res.data)) {
+        setClassRooms(res.data);
+      } else {
+        setClassRooms([]);
+      }
+
+    } catch (err) {
+      console.error("ClassRoom fetch failed:", err);
+    }
+  };
+
+  fetchClassRooms();
+}, []);
+
+  // ✅ Load Students when classroom changes
+  useEffect(() => {
+    if (!selectedClassRoom) {
       setStudents([]);
       return;
     }
@@ -32,8 +51,7 @@ const Students = () => {
 
         const { data } = await api.get("/admin/students", {
           params: {
-            grade,
-            section: section || undefined,
+            classRoom: selectedClassRoom,
             search: search || undefined,
             page,
             limit: 10,
@@ -50,7 +68,7 @@ const Students = () => {
     };
 
     fetchStudents();
-  }, [grade, section, search, page]);
+  }, [selectedClassRoom, search, page]);
 
   return (
     <>
@@ -58,33 +76,16 @@ const Students = () => {
       <div className="flex flex-wrap gap-4 mb-4">
         <select
           className="border px-3 py-2 rounded"
-          value={grade}
+          value={selectedClassRoom}
           onChange={(e) => {
-            setGrade(e.target.value);
+            setSelectedClassRoom(e.target.value);
             setPage(1);
           }}
         >
-          <option value="">Select Grade</option>
-          {GRADES.map((g) => (
-            <option key={g} value={g}>
-              {g}
-            </option>
-          ))}
-        </select>
-
-        <select
-          className="border px-3 py-2 rounded"
-          value={section}
-          onChange={(e) => {
-            setSection(e.target.value);
-            setPage(1);
-          }}
-          disabled={!grade}
-        >
-          <option value="">All Sections</option>
-          {SECTIONS.map((s) => (
-            <option key={s} value={s}>
-              Section {s}
+          <option value="">Select Class</option>
+          {classRooms.map((room) => (
+            <option key={room._id} value={room._id}>
+              {room.grade} - Section {room.section} ({room.academicYear})
             </option>
           ))}
         </select>
@@ -100,7 +101,7 @@ const Students = () => {
               setSearch(e.target.value);
               setPage(1);
             }}
-            disabled={!grade}
+            disabled={!selectedClassRoom}
           />
         </div>
       </div>
@@ -127,7 +128,7 @@ const Students = () => {
               </tr>
             )}
 
-            {!loading && students.length === 0 && grade && (
+            {!loading && students.length === 0 && selectedClassRoom && (
               <tr>
                 <td colSpan="6" className="p-4 text-center">
                   No students found
@@ -138,20 +139,31 @@ const Students = () => {
             {students.map((student) => (
               <tr key={student._id} className="border-t">
                 <td className="p-3">{student.name}</td>
-                <td className="p-3">{student.studentProfile.grade}</td>
-                <td className="p-3">{student.studentProfile.section}</td>
+
+                <td className="p-3">
+                  {student.studentProfile.classRoom?.grade || "—"}
+                </td>
+
+                <td className="p-3">
+                  {student.studentProfile.classRoom?.section || "—"}
+                </td>
+
                 <td className="p-3">
                   {student.studentProfile.guardian?.name || "—"}
                 </td>
+
                 <td className="p-3 capitalize">{student.status}</td>
+
                 <td className="p-3">
-                 <button
-  onClick={() => navigate(`/admin/students/${student._id}`)}
-  className="text-blue-600 hover:underline flex items-center gap-1"
->
-  <Eye size={16} />
-  View
-</button>
+                  <button
+                    onClick={() =>
+                      navigate(`/admin/students/${student._id}`)
+                    }
+                    className="text-blue-600 hover:underline flex items-center gap-1"
+                  >
+                    <Eye size={16} />
+                    View
+                  </button>
                 </td>
               </tr>
             ))}
@@ -169,9 +181,11 @@ const Students = () => {
           >
             Prev
           </button>
+
           <span className="px-3 py-1">
             Page {page} of {totalPages}
           </span>
+
           <button
             disabled={page === totalPages}
             onClick={() => setPage((p) => p + 1)}
@@ -181,15 +195,6 @@ const Students = () => {
           </button>
         </div>
       )}
-
-      {/* Drawer */}
-      {selectedStudent && (
-  <StudentDetailsDrawer
-    studentId={selectedStudent._id}
-    onClose={() => setSelectedStudent(null)}
-  />
-)}
-
     </>
   );
 };

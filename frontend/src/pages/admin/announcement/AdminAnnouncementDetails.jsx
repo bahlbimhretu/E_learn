@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
+import { Loader2, ArrowLeft } from "lucide-react";
 
 const AdminAnnouncementDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [announcement, setAnnouncement] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchAnnouncement = async () => {
@@ -16,6 +18,7 @@ const AdminAnnouncementDetails = () => {
         setAnnouncement(data);
       } catch (err) {
         console.error("Fetch announcement failed:", err);
+        setError("Failed to load announcement");
       } finally {
         setLoading(false);
       }
@@ -27,64 +30,52 @@ const AdminAnnouncementDetails = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-600" />
+        <Loader2 className="animate-spin w-8 h-8 text-blue-600" />
       </div>
     );
   }
 
-  if (!announcement) {
+  if (error || !announcement) {
     return (
       <div className="text-center py-10 text-red-600 font-medium">
-        Announcement not found
+        {error || "Announcement not found"}
       </div>
     );
   }
+
+  const audienceText = announcement.audience
+    ? [
+        announcement.audience.roles?.join(", "),
+        announcement.audience.grades?.join(", "),
+        announcement.audience.sections?.join(", "),
+      ]
+        .filter(Boolean)
+        .join(" | ")
+    : "All Users";
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
-      {/* Back */}
+      {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
-        className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-sm font-medium flex items-center gap-2"
+        className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-black"
       >
-        ← Back
+        <ArrowLeft size={16} />
+        Back
       </button>
 
       {/* Card */}
-      <div className="bg-white shadow-md rounded-lg p-6 space-y-6">
+      <div className="bg-white shadow-lg rounded-xl p-8 space-y-8">
         {/* Title */}
-        <h1 className="text-3xl font-bold text-gray-900">
-          {announcement.title}
-        </h1>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {announcement.title}
+          </h1>
 
-        {/* Content */}
-        <div className="prose max-w-none text-gray-700">
-          <div
-            dangerouslySetInnerHTML={{
-              __html: announcement.contentHtml,
-            }}
-          />
-        </div>
-
-        {/* Meta */}
-        <div className="border-t pt-4 grid grid-cols-2 gap-4 text-sm text-gray-600">
-          <div>
-            <span className="font-semibold">Audience:</span>{" "}
-            {announcement.audience
-              ? [
-                  announcement.audience.roles?.join(", "),
-                  announcement.audience.grades?.join(", "),
-                  announcement.audience.sections?.join(", "),
-                ]
-                  .filter(Boolean)
-                  .join(" | ")
-              : "All"}
-          </div>
-
-          <div>
-            <span className="font-semibold">Status:</span>{" "}
+          <div className="mt-3 flex gap-3 flex-wrap">
+            {/* Status Badge */}
             <span
-              className={`px-2 py-1 rounded-full text-xs ${
+              className={`px-3 py-1 rounded-full text-xs font-medium ${
                 announcement.status === "published"
                   ? "bg-green-100 text-green-700"
                   : "bg-yellow-100 text-yellow-700"
@@ -92,17 +83,52 @@ const AdminAnnouncementDetails = () => {
             >
               {announcement.status}
             </span>
+
+            {announcement.isArchived && (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                Archived
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Content (Quill HTML) */}
+        <div className="prose max-w-none break-words">
+          {announcement.contentHtml ? (
+            <div
+              dangerouslySetInnerHTML={{
+                __html: announcement.contentHtml,
+              }}
+            />
+          ) : (
+            <p className="text-gray-500 italic">
+              No content available
+            </p>
+          )}
+        </div>
+
+        {/* Meta Info */}
+        <div className="border-t pt-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-600">
+          <div>
+            <span className="font-semibold">Audience:</span>
+            <div className="mt-1">{audienceText}</div>
           </div>
 
           <div>
-            <span className="font-semibold">Created:</span>{" "}
-            {new Date(announcement.createdAt).toLocaleDateString()}
+            <span className="font-semibold">Created:</span>
+            <div className="mt-1">
+              {new Date(announcement.createdAt).toLocaleDateString()}
+            </div>
           </div>
 
           {announcement.publishedAt && (
             <div>
-              <span className="font-semibold">Published:</span>{" "}
-              {new Date(announcement.publishedAt).toLocaleDateString()}
+              <span className="font-semibold">Published:</span>
+              <div className="mt-1">
+                {new Date(
+                  announcement.publishedAt
+                ).toLocaleDateString()}
+              </div>
             </div>
           )}
         </div>

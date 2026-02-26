@@ -1,4 +1,3 @@
-// controllers/studentLessonController.js
 import Lesson from "../../models/Lesson.js";
 import CourseInstance from "../../models/CourseInstance.js";
 import Material from "../../models/Material.js";
@@ -8,20 +7,26 @@ export const getStudentLessonsByCourse = async (req, res) => {
     const student = req.user;
     const { id } = req.params;
 
-    const { grade, section, academicYear } = student.studentProfile || {};
+    // ✅ FIX: Use the same extraction logic as MyCourses
+    const { academicYear, classRoom } = student.studentProfile || {};
+    const grade = student.studentProfile?.grade || classRoom?.grade;
+    const section = student.studentProfile?.section || classRoom?.section;
+    const year = academicYear || classRoom?.academicYear;
 
-    // 🔒 Validate course access first
+    // 🔒 Validate course access with the correct variables
     const course = await CourseInstance.findOne({
       _id: id,
       grade,
       section,
-      academicYear,
+      academicYear: year, // Use the extracted year
       status: "active",
     });
 
     if (!course) {
+      // 💡 Added debug info so you can see why it fails in the network tab
       return res.status(403).json({
         message: "Access denied to this course",
+        debug: { grade, section, year } 
       });
     }
 
@@ -35,6 +40,8 @@ export const getStudentLessonsByCourse = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// ... keep getLessonMaterialsForStudent as is
 
 export const getLessonMaterialsForStudent = async (req, res) => {
   const { lessonId } = req.params;

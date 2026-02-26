@@ -38,7 +38,7 @@ router.put(
 router.delete(
   "/:id",
   protect,
-  authorize("admin"),
+  authorize("admin","teacher"),
   deleteLesson
 );
 
