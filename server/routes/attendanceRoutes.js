@@ -7,6 +7,9 @@ import {
   getMonthlyAttendanceReport,
   getParentViewData
 } from "../controllers/attendanceController.js";
+import { getStudentAttendance,
+  getAcademicYears
+ } from "../controllers/studentAttendance.js";
 
 import { protect } from "../middleware/authMiddleware.js";
 import { authorize } from "../middleware/roleMiddleware.js";
@@ -72,4 +75,14 @@ router.get("/parent/:studentId",
   authorize("parent"),
 getParentViewData
 );
+
+//student view of their attendance records
+router.get("/student", protect, 
+  authorize("student"),
+  getStudentAttendance);
+  router.get("/academic-years",
+    protect,
+    authorize("student"),
+    getAcademicYears
+  );
 export default router;

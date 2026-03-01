@@ -32,6 +32,8 @@ import {
   
 } from "../controllers/adminCourseInstanceController.js";
 import { getClassRooms } from "../controllers/classRoomController.js";
+import { promoteClass } from "../controllers/promotionController.js";
+import { getStudentsWithAverages } from "../controllers/promotionController.js";
 const router = express.Router();
 
 router.get("/stats", protect, authorize("admin"), getAdminStats);
@@ -141,6 +143,17 @@ router.get("/classrooms",
   protect, authorize("admin"),
 getClassRooms
   );
+  router.post("/promote-class", 
+    protect, 
+    authorize("admin"),
+     promoteClass);
+  // Check for this specific path
+// In your routes file
+router.get("/classrooms/:classRoomId/students-with-averages", 
+  protect, 
+  authorize("admin"),
+  getStudentsWithAverages
+);
 export default router;
 
 

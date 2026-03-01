@@ -31,7 +31,7 @@ const Sidebar = () => {
     student: [
       { label: "Dashboard", link: "/dashboard", icon: LayoutDashboard },
       { label: "My Courses", link: "/my-courses", icon: BookOpen },
-      { label: "Attendance", link: "/my-attendance", icon: Users },
+      { label: "Attendance", link: "/student/attendance", icon: Users },
       { label: "Announcements", link: "/student/announcements", icon: Bell },
       { label: "Results", link: "/student/results", icon: ClipboardList },
     ],

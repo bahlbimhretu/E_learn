@@ -170,11 +170,12 @@ const StudentCourseDetails = () => {
         {view === "lessons" ? (
           lessons.length ? (
             <>
-              <LessonViewer
-                lessons={lessons}
-                currentIndex={currentIndex}
-                setCurrentIndex={setCurrentIndex}
-              />
+             <LessonViewer
+  lessons={lessons}
+  currentIndex={currentIndex}
+  setCurrentIndex={setCurrentIndex}
+  courseId={course._id}
+/>
 
               <div className="mt-6">
                 {quizLoading ? (

@@ -75,6 +75,13 @@ const AdminLayout = ({ children, stats }) => {
             <BarChart3 size={18} />
             Reports
           </NavLink>
+          <NavLink to="/admin/promoteclass" className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2 rounded-lg transition
+            ${isActive ? "bg-blue-600 text-white" : "hover:bg-white/10"}` 
+          }>
+            <School size={18} />
+            Promote Class
+          </NavLink>
 
           <NavLink to="/admin/announcements" className={({ isActive }) =>
             `flex items-center gap-3 px-4 py-2 rounded-lg transition

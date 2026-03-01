@@ -55,6 +55,8 @@ import StudentReport from "../pages/teacher/StudentReport.jsx";
 import EditLesson from "../pages/lessons/EditLesson.jsx";
 import ParentAttendance from "../pages/parent/AttendancePage.jsx";
 import StudentResultPage from "../pages/student/StudentResultPage.jsx";
+import PromoteClass from "../pages/admin/PromoteClass.jsx";
+import StudentAttendance from "../pages/student/StudentAttendance.jsx";
 
 export default function AppRouter() {
   return (
@@ -140,6 +142,15 @@ element={
   }
 />
 <Route
+  path="/student/attendance"
+  element={
+  
+  <ProtectedRoute allowedRoles={["student"]}>
+  <StudentAttendance />
+  </ProtectedRoute>
+  }
+/>
+<Route
   path="/teacher/homeroom/performance"
   element={
   <ProtectedRoute allowedRoles={["teacher"]}>
@@ -213,7 +224,16 @@ element={
 <ClassManager />
   </ProtectedRoute>}
  />
-      <Route
+
+ <Route
+  path="/admin/promoteclass"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <PromoteClass />
+    </ProtectedRoute>
+  }
+/>
+<Route
   path="/student/exercise-quiz/:quizId"
   element={
     <ProtectedRoute allowedRoles={["student"]}>

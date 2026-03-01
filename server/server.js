@@ -30,6 +30,7 @@ import classRoomRoutes from "./routes/classRoomRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import homeroomRoutes from "./routes/homeroomRoutes.js";
 import homeroomMessageRoutes from "./routes/homeroomMessageRoutes.js";
+import progressRoutes from "./routes/progressRoutes.js";
 dotenv.config();
 connectDB(); // <-- CONNECT DB FIRST
 
@@ -90,7 +91,7 @@ app.use("/api/submissions", submissionRoutes);
 
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/parent", parentRoutes);
-
+app.use("/api/progress", progressRoutes);
 // Test routes
 app.get("/", (req, res) => {
   res.send("API running...");

@@ -4,32 +4,36 @@ import Material from "../../models/Material.js";
 
 export const getStudentLessonsByCourse = async (req, res) => {
   try {
-    const student = req.user;
-    const { id } = req.params;
+    const userId = req.user._id;
+    const { id } = req.params; // This is the CourseInstance ID
 
-    // ✅ FIX: Use the same extraction logic as MyCourses
-    const { academicYear, classRoom } = student.studentProfile || {};
-    const grade = student.studentProfile?.grade || classRoom?.grade;
-    const section = student.studentProfile?.section || classRoom?.section;
-    const year = academicYear || classRoom?.academicYear;
-
-    // 🔒 Validate course access with the correct variables
-    const course = await CourseInstance.findOne({
-      _id: id,
-      grade,
-      section,
-      academicYear: year, // Use the extracted year
-      status: "active",
-    });
+    // 1. Find the course strictly by ID first
+    const course = await CourseInstance.findById(id);
 
     if (!course) {
-      // 💡 Added debug info so you can see why it fails in the network tab
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    // 2. CHECK ENROLLMENT: Does the 'students' array contain this student's ID?
+    const isEnrolled = course.students.some(
+      (studentId) => studentId.toString() === userId.toString()
+    );
+
+    // 3. VALIDATE ACCESS
+    // Allow access if the student is enrolled OR if they are an admin
+    if (!isEnrolled && req.user.role !== "admin") {
       return res.status(403).json({
         message: "Access denied to this course",
-        debug: { grade, section, year } 
+        debug: {
+          reason: "Student not found in enrollment list for this instance",
+          studentId: userId,
+          courseGrade: course.grade,
+          studentCurrentGrade: req.user.studentProfile?.grade
+        }
       });
     }
 
+    // 4. FETCH LESSONS
     const lessons = await Lesson.find({ course: id })
       .sort({ order: 1 })
       .select("title content videoUrl order createdAt");
@@ -40,7 +44,6 @@ export const getStudentLessonsByCourse = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 // ... keep getLessonMaterialsForStudent as is
 
 export const getLessonMaterialsForStudent = async (req, res) => {

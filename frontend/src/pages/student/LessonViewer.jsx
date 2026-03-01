@@ -1,31 +1,83 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import LessonMaterials from "./LessonMaterials";
-import api from "../../api/axios"; // your axios instance
 import LessonAssignmentsStudent from "../student/LessonAssignmentsStudent";
+import api from "../../api/axios";
 
-const getEmbedUrl = (url) => {
-  if (!url) return "";
-  if (url.includes("youtube.com/embed")) return url;
+/* ----------------------------
+   Extract YouTube Video ID
+----------------------------- */
+const getYouTubeId = (url) => {
+  if (!url) return null;
+
   if (url.includes("watch?v=")) {
-    const id = url.split("watch?v=")[1].split("&")[0];
-    return `https://www.youtube.com/embed/${id}`;
+    return url.split("watch?v=")[1].split("&")[0];
   }
+
   if (url.includes("youtu.be/")) {
-    const id = url.split("youtu.be/")[1].split("?")[0];
-    return `https://www.youtube.com/embed/${id}`;
+    return url.split("youtu.be/")[1].split("?")[0];
   }
-  return url;
+
+  if (url.includes("youtube.com/embed/")) {
+    return url.split("embed/")[1];
+  }
+
+  return null;
 };
 
-const LessonViewer = ({ lessons, currentIndex, setCurrentIndex }) => {
+const LessonViewer = ({
+  lessons,
+  currentIndex,
+  setCurrentIndex,
+  courseId,
+}) => {
   const [materials, setMaterials] = useState([]);
+  const [progress, setProgress] = useState(0);
+
+  const playerRef = useRef(null);
+  const intervalRef = useRef(null);
+  const completedRef = useRef(false);
+
   const lesson = lessons[currentIndex];
 
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex < lessons.length - 1;
 
-  // 🔹 Fetch materials whenever the lesson changes
+  /* ----------------------------
+     Fetch Course Progress
+  ----------------------------- */
+  const fetchProgress = async () => {
+    if (!courseId) return;
+
+    try {
+      const res = await api.get(`/progress/${courseId}`);
+      setProgress(res.data.percentage || 0);
+    } catch (err) {
+      console.error("Failed to fetch progress:", err);
+    }
+  };
+
+  /* ----------------------------
+     Load YouTube API Once
+  ----------------------------- */
+  useEffect(() => {
+    if (!window.YT) {
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.body.appendChild(tag);
+    }
+  }, []);
+
+  /* ----------------------------
+     Fetch Progress On Load
+  ----------------------------- */
+  useEffect(() => {
+    fetchProgress();
+  }, [courseId]);
+
+  /* ----------------------------
+     Fetch Materials
+  ----------------------------- */
   useEffect(() => {
     if (!lesson?._id) {
       setMaterials([]);
@@ -45,10 +97,101 @@ const LessonViewer = ({ lessons, currentIndex, setCurrentIndex }) => {
     fetchMaterials();
   }, [lesson?._id]);
 
+  /* ----------------------------
+     Auto Completion Logic
+  ----------------------------- */
+  const checkProgress = async () => {
+    if (!playerRef.current || completedRef.current) return;
+
+    const duration = playerRef.current.getDuration();
+    const currentTime = playerRef.current.getCurrentTime();
+
+    if (!duration) return;
+
+    const percentage = (currentTime / duration) * 100;
+
+    if (percentage >= 90) {
+      completedRef.current = true;
+      clearInterval(intervalRef.current);
+
+      try {
+        await api.post("/progress/complete", {
+          lessonId: lesson._id,
+          courseId: courseId,
+        });
+
+        await fetchProgress(); // refresh progress bar
+      } catch (err) {
+        console.error("Auto-complete failed:", err);
+      }
+    }
+  };
+
+  /* ----------------------------
+     Initialize Player On Lesson Change
+  ----------------------------- */
+  useEffect(() => {
+    if (!lesson?.videoUrl) return;
+
+    completedRef.current = false;
+    clearInterval(intervalRef.current);
+
+    const videoId = getYouTubeId(lesson.videoUrl);
+    if (!videoId) return;
+
+    const createPlayer = () => {
+      if (playerRef.current) {
+        playerRef.current.destroy();
+      }
+
+      playerRef.current = new window.YT.Player("youtube-player", {
+        videoId,
+        events: {
+          onReady: () => {
+            intervalRef.current = setInterval(checkProgress, 5000);
+          },
+        },
+      });
+    };
+
+    if (window.YT && window.YT.Player) {
+      createPlayer();
+    } else {
+      window.onYouTubeIframeAPIReady = createPlayer;
+    }
+
+    return () => {
+      clearInterval(intervalRef.current);
+      if (playerRef.current) {
+        playerRef.current.destroy();
+      }
+    };
+  }, [lesson?._id]);
+
   if (!lesson) return null;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border">
+
+      {/* =========================
+          COMPLETION BAR
+      ========================== */}
+      <div className="p-4 border-b bg-slate-50">
+        <div className="flex justify-between text-sm mb-2">
+          <span className="text-gray-600">Course Progress</span>
+          <span className="font-semibold text-blue-600">
+            {progress}%
+          </span>
+        </div>
+
+        <div className="w-full bg-gray-200 rounded h-3">
+          <div
+            className="bg-blue-600 h-3 rounded transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+
       {/* Lesson Header */}
       <div className="p-4 border-b">
         <h2 className="text-xl font-semibold text-slate-800">
@@ -58,16 +201,11 @@ const LessonViewer = ({ lessons, currentIndex, setCurrentIndex }) => {
 
       {/* Lesson Content */}
       <div className="p-6 space-y-6">
+
         {/* Video */}
         {lesson.videoUrl && (
           <div className="aspect-video rounded-lg overflow-hidden border">
-            <iframe
-              src={getEmbedUrl(lesson.videoUrl)}
-              title={lesson.title}
-              className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
+            <div id="youtube-player" className="w-full h-full" />
           </div>
         )}
 
@@ -81,6 +219,8 @@ const LessonViewer = ({ lessons, currentIndex, setCurrentIndex }) => {
             dangerouslySetInnerHTML={{ __html: lesson.content }}
           />
         )}
+
+        {/* Assignments */}
         <LessonAssignmentsStudent lessonId={lesson._id} />
       </div>
 

@@ -1,33 +1,12 @@
 import CourseInstance from "../../models/CourseInstance.js";
 
+
 export const getStudentCourseInstances = async (req, res) => {
   try {
     const student = req.user;
 
-    if (!student || !student.studentProfile) {
-      return res.status(400).json({ message: "Student profile not found" });
-    }
-
-    // ✅ FIX: Extract from studentProfile, but fallback to classRoom object
-    const { academicYear, classRoom } = student.studentProfile;
-    
-    // We try to get grade/section from the profile directly, 
-    // or from the populated classRoom object.
-    const grade = student.studentProfile.grade || classRoom?.grade;
-    const section = student.studentProfile.section || classRoom?.section;
-
-    if (!grade || !section || !academicYear) {
-      return res.status(400).json({
-        message: "Incomplete student profile (grade, section, academicYear required)",
-        received: { grade, section, academicYear } // Useful for debugging
-      });
-    }
-
     const courses = await CourseInstance.find({
-      grade,
-      section,
-      academicYear,
-      status: "active",
+      students: student._id, // 🔥 KEY FIX
     })
       .populate({
         path: "courseTemplate",
@@ -37,7 +16,7 @@ export const getStudentCourseInstances = async (req, res) => {
         path: "teacher",
         select: "name",
       })
-      .sort({ createdAt: -1 });
+      .sort({ academicYear: -1, createdAt: -1 });
 
     const formattedCourses = courses.map((course) => ({
       _id: course._id,
@@ -47,6 +26,7 @@ export const getStudentCourseInstances = async (req, res) => {
       courseName: course.courseTemplate?.name,
       thumbnail: course.courseTemplate?.thumbnail,
       teacherName: course.teacher?.name || "Unknown",
+      status: course.status, // 🔥 important
       createdAt: course.createdAt,
     }));
 
@@ -56,31 +36,14 @@ export const getStudentCourseInstances = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 export const getStudentCourseInstanceById = async (req, res) => {
   try {
     const student = req.user;
     const { id } = req.params;
 
-    if (!student || !student.studentProfile) {
-      return res.status(400).json({ message: "Student profile not found" });
-    }
-
-    // ✅ FIX: Extract from studentProfile fallback to classRoom
-    const { academicYear, classRoom } = student.studentProfile;
-    const grade = student.studentProfile.grade || classRoom?.grade;
-    const section = student.studentProfile.section || classRoom?.section;
-
-    if (!grade || !section || !academicYear) {
-      return res.status(400).json({ message: "Incomplete student profile" });
-    }
-
     const course = await CourseInstance.findOne({
       _id: id,
-      grade,
-      section,
-      academicYear,
-      status: "active",
+      students: student._id, // 🔥 KEY FIX
     })
       .populate({
         path: "courseTemplate",
@@ -106,6 +69,7 @@ export const getStudentCourseInstanceById = async (req, res) => {
       grade: course.grade,
       section: course.section,
       academicYear: course.academicYear,
+      status: course.status, // 🔥 important
     });
   } catch (error) {
     console.error("Student course fetch error:", error);
