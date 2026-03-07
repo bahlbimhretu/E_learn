@@ -127,7 +127,7 @@ const TeacherAnnouncements = () => {
 
           {/* Audience */}
           <div className="flex gap-6 mb-4">
-            {["student", "teacher", "parent"].map((role) => (
+            {["student", "parent"].map((role) => (
               <label key={role}>
                 <input
                   type="radio"

@@ -47,7 +47,7 @@ const Login = () => {
             className="w-20 h-20 rounded-full shadow mb-3"
           />
           <h1 className="text-xl font-bold text-gray-800 text-center">
-            Tsinseta Le Mariam Secondary School
+            Tsinseta Mariam Senior Secondary School
           </h1>
           <p className="text-sm text-gray-500">Learning Management System</p>
         </div>

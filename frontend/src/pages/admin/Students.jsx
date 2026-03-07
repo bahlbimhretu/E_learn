@@ -138,7 +138,7 @@ const Students = () => {
 
             {students.map((student) => (
               <tr key={student._id} className="border-t">
-                <td className="p-3">{student.name}</td>
+                <td className="p-3">{student.name} {student.fatherName} {student.grandFatherName}</td>
 
                 <td className="p-3">
                   {student.studentProfile.classRoom?.grade || "—"}

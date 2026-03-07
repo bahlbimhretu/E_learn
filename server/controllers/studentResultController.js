@@ -1,12 +1,14 @@
 import Result from "../models/Result.js";
-import CourseInstance from "../models/CourseInstance.js";
+import User from "../models/Users.js";
 
+// ==========================================
+// GET STUDENT RESULTS BY ACADEMIC YEAR
+// ==========================================
 export const getStudentResults = async (req, res) => {
   try {
     const studentId = req.user._id;
     const { academicYear } = req.query;
 
-    // 🔐 Role protection
     if (req.user.role !== "student") {
       return res.status(403).json({ message: "Access denied" });
     }
@@ -14,6 +16,17 @@ export const getStudentResults = async (req, res) => {
     if (!academicYear) {
       return res.status(400).json({ message: "Academic year required" });
     }
+
+    const student = await User.findById(studentId).populate(
+      "studentProfile.classRoom"
+    );
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const grade = student.studentProfile?.classRoom?.grade || "";
+    const section = student.studentProfile?.classRoom?.section || "";
 
     const results = await Result.find({
       student: studentId,
@@ -29,9 +42,9 @@ export const getStudentResults = async (req, res) => {
     if (!results.length) {
       return res.json({
         student: {
-          name: req.user.name,
-          grade: req.user.studentProfile?.grade,
-          section: req.user.studentProfile?.section,
+          name: student.name,
+          grade,
+          section,
           academicYear,
         },
         subjects: [],
@@ -48,37 +61,39 @@ export const getStudentResults = async (req, res) => {
     const subjects = results.map((r) => {
       const semester1Total = r.semester1?.total || 0;
       const semester2Total = r.semester2?.total || 0;
-      const yearTotal = r.yearTotal || 0;
-      const yearAverage = r.yearFinalScore || 0;
+
+      const yearTotal = semester1Total + semester2Total;
+      const yearAverage = yearTotal / 2;
 
       grandTotal += yearTotal;
 
       return {
-        subjectName: r.courseInstance.courseTemplate.name,
-        subjectCode: r.courseInstance.courseTemplate.code,
+        subjectName: r.courseInstance?.courseTemplate?.name || "Unknown",
+        subjectCode: r.courseInstance?.courseTemplate?.code || "-",
         semester1Total,
         semester2Total,
         yearTotal,
-        yearAverage,
+        yearAverage: Number(yearAverage.toFixed(2)),
       };
     });
 
     const totalSubjects = subjects.length;
+
     const overallAverage =
-      totalSubjects > 0 ? grandTotal / totalSubjects : 0;
+      totalSubjects > 0 ? grandTotal / (totalSubjects * 2) : 0;
 
     res.json({
       student: {
-        name: req.user.name,
-        grade: req.user.studentProfile?.grade,
-        section: req.user.studentProfile?.section,
+        name: student.name,
+        grade,
+        section,
         academicYear,
       },
       subjects,
       summary: {
         totalSubjects,
         grandTotal,
-        overallAverage,
+        overallAverage: Number(overallAverage.toFixed(2)),
       },
     });
   } catch (error) {
@@ -86,20 +101,27 @@ export const getStudentResults = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-// Add this to your existing controller file
+
+// ==========================================
+// GET AVAILABLE YEARS
+// ==========================================
 export const getAvailableYears = async (req, res) => {
   try {
     const studentId = req.user._id;
 
-    // Finds all unique academicYear values for this student
-    const years = await Result.distinct("academicYear", { student: studentId });
+    if (req.user.role !== "student") {
+      return res.status(403).json({ message: "Access denied" });
+    }
 
-    // Sort years descending (newest first)
+    const years = await Result.distinct("academicYear", {
+      student: studentId,
+    });
+
     const sortedYears = years.sort((a, b) => b.localeCompare(a));
 
     res.json(sortedYears);
   } catch (error) {
-    console.error("Error fetching years:", error);
+    console.error("Error fetching academic years:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

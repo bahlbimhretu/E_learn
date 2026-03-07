@@ -121,7 +121,7 @@ const AddUser = () => {
         {/* COMMON FIELDS */}
         <input
           name="name"
-          placeholder="Full Name"
+          placeholder="First Name"
           value={formData.name}
           onChange={handleChange}
           className="input"
@@ -162,8 +162,8 @@ const AddUser = () => {
         >
           <option value="student">Student</option>
           <option value="teacher">Teacher</option>
-          <option value="parent">Parent</option>
-          <option value="admin">Admin</option>
+         
+          
         </select>
 
         {/* ================= STUDENT ================= */}

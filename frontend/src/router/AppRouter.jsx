@@ -57,12 +57,13 @@ import ParentAttendance from "../pages/parent/AttendancePage.jsx";
 import StudentResultPage from "../pages/student/StudentResultPage.jsx";
 import PromoteClass from "../pages/admin/PromoteClass.jsx";
 import StudentAttendance from "../pages/student/StudentAttendance.jsx";
-
+import HomePage from "../pages/HomePage.jsx";
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
         {/* Public Routes */}
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
        <Route path="/admin/users" element={<UserManagement />} />

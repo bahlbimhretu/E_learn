@@ -131,7 +131,7 @@ const MarksPage = () => {
               {students.map((student, index) => (
                 <tr key={student.studentId}>
                   <td className="border p-2 font-medium">
-                    {student.name}
+                    {student.name} {student.fatherName} {student.grandFatherName}
                   </td>
 
                   {["quiz1", "mid", "quiz2", "participation", "final"].map(
