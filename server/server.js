@@ -23,6 +23,7 @@ import quizRoutes from "./routes/quizRoutes.js";
 // app.js or server.js
 import studentRoutes from "./routes/studentRoutes.js";
 import studentExerciseRoutes from "./routes/studentExerciseRoutes.js";
+import studentQuizAttemptRoutes from "./routes/studentQuizAttemptRoutes.js";
 import parentRoutes from "./routes/parentRoutes.js";
 import assignmentRoutes from "./routes/assignmentRoutes.js";
 import submissionRoutes from "./routes/submissionRoutes.js";
@@ -79,6 +80,7 @@ app.use("/api/classrooms", classRoomRoutes);
 //student routes
 app.use("/api/student", studentRoutes);
 app.use("/api/student", studentExerciseRoutes);
+app.use("/api/student", studentQuizAttemptRoutes);
 
 // Question routes
 app.use("/api", questionRoutes);

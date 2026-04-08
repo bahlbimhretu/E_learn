@@ -1,26 +1,44 @@
+
+ // adjust path if needed
+
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
-import User from "../models/Users.js"; // adjust path if needed
+import dotenv from "dotenv";
+dotenv.config({ path: "../.env" });
+import User from "../models/Users.js";
 
-const updatePassword = async () => {
+dotenv.config();
+
+const seedAdmin = async () => {
   try {
+    await mongoose.connect(process.env.MONGO_URI);
 
-    const userId = "69ab084cf8cdcf57e7d582c3";
+    console.log("MongoDB Connected");
 
-    const hashedPassword = await bcrypt.hash("1234", 10);
+    // ❗ Check if admin already exists
+    const existingAdmin = await User.findOne({ email: "bahlbi.mhre@g.com" });
 
-    await User.findByIdAndUpdate(userId, {
-      password: hashedPassword
+    if (existingAdmin) {
+      console.log("Admin already exists");
+      process.exit();
+    }
+
+    // ✅ Create admin
+    const admin = new User({
+      name: "Admin",
+      email: "admin@role.com",
+      password: "12345678", // will be hashed automatically
+      role: "admin",
+      status: "active",
     });
 
-    console.log("Password updated successfully");
+    await admin.save();
 
+    console.log("✅ Admin created successfully!");
     process.exit();
-
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error seeding admin:", error);
     process.exit(1);
   }
 };
 
-updatePassword();
+seedAdmin();

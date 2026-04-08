@@ -1,6 +1,8 @@
 import { useState, useContext, useEffect } from "react";
 import api from "../../../api/axios";
 import { AuthContext } from "../../../context/AuthContext";
+import BulkUploadUsers from "./BulkUploadUsers";
+
 
 const AddUser = () => {
   const { token } = useContext(AuthContext);
@@ -35,6 +37,7 @@ const AddUser = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [mode, setMode] = useState("single"); // "single" | "bulk"
 
   /* =========================
      LOAD CLASSROOMS
@@ -110,13 +113,34 @@ const AddUser = () => {
   const { role } = formData;
 
   return (
+    
     <div className="max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow border">
+      <div className="flex gap-4 mb-4">
+  <button
+    onClick={() => setMode("single")}
+    className={`px-4 py-2 rounded ${
+      mode === "single" ? "bg-blue-600 text-white" : "bg-gray-200"
+    }`}
+  >
+    Single User
+  </button>
+
+  <button
+    onClick={() => setMode("bulk")}
+    className={`px-4 py-2 rounded ${
+      mode === "bulk" ? "bg-blue-600 text-white" : "bg-gray-200"
+    }`}
+  >
+    Bulk Upload
+  </button>
+</div>
       <h2 className="text-2xl font-bold mb-4">Add New User</h2>
 
       {error && <p className="text-red-600 mb-3">{error}</p>}
       {success && <p className="text-green-600 mb-3">{success}</p>}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+    {mode === "single" ? (
+  <form onSubmit={handleSubmit} className="space-y-4">
 
         {/* COMMON FIELDS */}
         <input
@@ -311,7 +335,10 @@ const AddUser = () => {
         >
           {loading ? "Creating..." : "Create User"}
         </button>
-      </form>
+        </form>
+) : (
+  <BulkUploadUsers />
+)}
     </div>
   );
 };

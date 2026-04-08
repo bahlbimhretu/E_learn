@@ -317,3 +317,87 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+import ClassRoom from "../models/ClassRoom.js";
+import { createUser } from "../services/userService.js";
+
+export const bulkRegisterUsers = async (req, res) => {
+  try {
+    const { users } = req.body;
+
+    if (!users || !users.length) {
+      return res.status(400).json({ message: "No users provided" });
+    }
+
+    // 🔥 Load all classrooms once
+    const classrooms = await ClassRoom.find();
+
+    const classMap = {};
+    classrooms.forEach((c) => {
+      classMap[`${c.grade}-${c.section}`] = c;
+    });
+
+    let successCount = 0;
+    let failedCount = 0;
+    const errors = [];
+
+    for (let i = 0; i < users.length; i++) {
+      const u = users[i];
+
+      try {
+        // =============================
+        // NORMALIZE DATA
+        // =============================
+        const grade = u.grade?.trim();
+        const section = u.section?.trim().toUpperCase();
+
+        const key = `${grade}-${section}`;
+        const classroom = classMap[key];
+
+        if (!classroom) {
+          throw new Error(`Class ${key} not found`);
+        }
+
+        // =============================
+        // TRANSFORM TO SYSTEM FORMAT
+        // =============================
+        const payload = {
+          role: "student",
+          name: u.name,
+          fatherName: u.fatherName,
+          grandFatherName: u.grandFatherName,
+          email: u.email,
+
+          student: {
+            classRoom: classroom._id,
+            academicYear: classroom.academicYear,
+          },
+
+          parent: {
+            name: u.parentName,
+            email: u.parentEmail,
+            phone: u.parentPhone,
+          },
+        };
+
+        await createUser(payload);
+
+        successCount++;
+      } catch (err) {
+        failedCount++;
+        errors.push({
+          row: i + 1,
+          email: u.email,
+          message: err.message,
+        });
+      }
+    }
+
+    res.json({
+      successCount,
+      failedCount,
+      errors,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
