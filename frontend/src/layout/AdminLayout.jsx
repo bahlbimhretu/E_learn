@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 import {
@@ -11,114 +11,118 @@ import {
   Bell,
   School,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react";
 
 const AdminLayout = ({ children, stats }) => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const [open, setOpen] = useState(false); // ✅ NEW
+
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
+  const navItem = (to, label, Icon, end = false) => (
+    <NavLink
+      to={to}
+      end={end}
+      onClick={() => setOpen(false)} // close on mobile click
+      className={({ isActive }) =>
+        `flex items-center gap-3 px-4 py-2 rounded-lg transition text-sm
+        ${isActive ? "bg-blue-600 text-white" : "hover:bg-white/10"}`
+      }
+    >
+      <Icon size={18} />
+      {label}
+    </NavLink>
+  );
+
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
 
-      {/* SIDEBAR */}
-      <aside className="w-64 bg-gradient-to-b from-[#0f172a] to-[#020617] text-gray-300 sticky top-0 h-screen">
+      {/* 🔹 MOBILE OVERLAY */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
 
-        <div className="px-6 py-5 border-b border-white/10">
-          <h1 className="text-white font-bold text-lg">Tsinseta LMS</h1>
-          <p className="text-sm text-gray-400">Admin Portal</p>
-          <p className="text-xs text-gray-500 mt-1">System Management</p>
-        </div>
+      {/* 🔹 SIDEBAR */}
+      <aside
+        className={`
+          fixed z-50 top-0 left-0 h-full w-64 transform
+          bg-gradient-to-b from-[#0f172a] to-[#020617] text-gray-300
+          transition-transform duration-300
+          ${open ? "translate-x-0" : "-translate-x-full"}
+          md:translate-x-0 md:static md:flex
+        `}
+      >
+        <div className="flex flex-col w-full">
 
-        <nav className="px-4 py-6 space-y-1 text-sm">
-
-          <NavLink to="/admin" end className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2 rounded-lg transition
-            ${isActive ? "bg-blue-600 text-white" : "hover:bg-white/10"}`
-          }>
-            <LayoutDashboard size={18} />
-            Dashboard
-          </NavLink>
-
-          <NavLink to="/admin/users" className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2 rounded-lg transition
-            ${isActive ? "bg-blue-600 text-white" : "hover:bg-white/10"}`
-          }>
-            <Users size={18} />
-            User Management
-          </NavLink>
-
-          <NavLink to="/admin/courses" className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2 rounded-lg transition
-            ${isActive ? "bg-blue-600 text-white" : "hover:bg-white/10"}`
-          }>
-            <BookOpen size={18} />
-            Course Management
-          </NavLink>
-
-          <NavLink to="/admin/classes" className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2 rounded-lg transition
-            ${isActive ? "bg-blue-600 text-white" : "hover:bg-white/10"}`
-          }>
-            <School size={18} />
-            Class Management
-          </NavLink>
-
-          <NavLink to="/admin/reports" className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2 rounded-lg transition
-            ${isActive ? "bg-blue-600 text-white" : "hover:bg-white/10"}`
-          }>
-            <BarChart3 size={18} />
-            Reports
-          </NavLink>
-          <NavLink to="/admin/promoteclass" className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2 rounded-lg transition
-            ${isActive ? "bg-blue-600 text-white" : "hover:bg-white/10"}` 
-          }>
-            <School size={18} />
-            Promote Class
-          </NavLink>
-
-          <NavLink to="/admin/announcements" className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2 rounded-lg transition
-            ${isActive ? "bg-blue-600 text-white" : "hover:bg-white/10"}`
-          }>
-            <Megaphone size={18} />
-            Announcements
-          </NavLink>
-
-        </nav>
-      </aside>
-
-      {/* CONTENT AREA */}
-      <div className="flex-1 flex flex-col">
-
-        {/* TOP NAVBAR */}
-        <header className="bg-white border-b px-6 py-3 flex items-center justify-between sticky top-0 z-10">
-
-          {/* LEFT */}
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="font-semibold text-gray-800">
-                {user?.name || "Administrator"}
-              </h2>
-
-              <span className="text-xs px-2 py-0.5 rounded-full text-white bg-red-500">
-                ADMIN
-              </span>
+          {/* HEADER */}
+          <div className="flex justify-between items-center px-6 py-5 border-b border-white/10">
+            <div>
+              <h1 className="text-white font-bold text-lg">Tsinseta LMS</h1>
+              <p className="text-sm text-gray-400">Admin Portal</p>
             </div>
 
-            <p className="text-xs text-gray-500">
-              System Administrator Access
-            </p>
+            {/* Close button (mobile) */}
+            <button onClick={() => setOpen(false)} className="md:hidden">
+              <X />
+            </button>
+          </div>
+
+          {/* NAV */}
+          <nav className="px-4 py-6 space-y-1">
+            {navItem("/admin", "Dashboard", LayoutDashboard, true)}
+            {navItem("/admin/users", "User Management", Users)}
+            {navItem("/admin/courses", "Course Management", BookOpen)}
+            {navItem("/admin/classes", "Class Management", School)}
+            {navItem("/admin/reports", "Reports", BarChart3)}
+            {navItem("/admin/promoteclass", "Promote Class", School)}
+            {navItem("/admin/announcements", "Announcements", Megaphone)}
+          </nav>
+        </div>
+      </aside>
+
+      {/* 🔹 MAIN CONTENT */}
+      <div className="flex flex-col flex-1">
+
+        {/* 🔹 NAVBAR */}
+        <header className="bg-white border-b px-4 sm:px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+
+          {/* LEFT */}
+          <div className="flex items-center gap-3">
+
+            {/* Mobile menu button */}
+            <button onClick={() => setOpen(true)} className="md:hidden">
+              <Menu size={22} />
+            </button>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="font-semibold text-sm sm:text-base text-gray-800">
+                  {user?.name || "Administrator"}
+                </h2>
+
+                <span className="text-[10px] sm:text-xs px-2 py-0.5 rounded-full text-white bg-red-500">
+                  ADMIN
+                </span>
+              </div>
+
+              <p className="text-[10px] sm:text-xs text-gray-500">
+                System Administrator Access
+              </p>
+            </div>
           </div>
 
           {/* RIGHT */}
-          <div className="flex items-center gap-5">
+          <div className="flex items-center gap-4 sm:gap-5">
 
             {/* Notifications */}
             <div className="relative cursor-pointer">
@@ -134,17 +138,16 @@ const AdminLayout = ({ children, stats }) => {
             {/* Logout */}
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 text-sm text-gray-600 hover:text-red-600 transition"
+              className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600 hover:text-red-600 transition"
             >
               <LogOut size={16} />
-              Logout
+              <span className="hidden sm:inline">Logout</span>
             </button>
-
           </div>
         </header>
 
-        {/* MAIN CONTENT */}
-        <main className="flex-1 p-6">
+        {/* 🔹 CONTENT */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           {children}
         </main>
 

@@ -7,10 +7,11 @@ import {
   Users,
   Bell,
   MessageCircle,
+  X,
 } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
 
-const Sidebar = () => {
+const Sidebar = ({ open, setOpen }) => {
   const { user } = useContext(AuthContext);
 
   const menu = {
@@ -18,16 +19,14 @@ const Sidebar = () => {
       { label: "Dashboard", link: "/teacher", icon: LayoutDashboard },
       { label: "My Courses", link: "/teacher/course-instances", icon: BookOpen },
       { label: "Announcements", link: "/teacher/announcements", icon: Bell },
-      
     ],
     parent: [
-  { label: "Dashboard", link: "/parent", icon: LayoutDashboard },
-  { label: "Performance (Results)", link: "/parent/results", icon: ClipboardList },
-  { label: "Attendance", link: "/parent/attendance", icon: Users },
-  { label: "Announcements", link: "/parent/announcements", icon: Bell },
-  { label: "Inbox", link: "/parent/inbox", icon: MessageCircle  },
-],
-
+      { label: "Dashboard", link: "/parent", icon: LayoutDashboard },
+      { label: "Performance", link: "/parent/results", icon: ClipboardList },
+      { label: "Attendance", link: "/parent/attendance", icon: Users },
+      { label: "Announcements", link: "/parent/announcements", icon: Bell },
+      { label: "Inbox", link: "/parent/inbox", icon: MessageCircle },
+    ],
     student: [
       { label: "Dashboard", link: "/dashboard", icon: LayoutDashboard },
       { label: "My Courses", link: "/my-courses", icon: BookOpen },
@@ -35,73 +34,68 @@ const Sidebar = () => {
       { label: "Announcements", link: "/student/announcements", icon: Bell },
       { label: "Results", link: "/student/results", icon: ClipboardList },
     ],
-
-  
   };
 
   const items = menu[user?.role] || [];
-  const isStudent = user?.role === "student";
 
   return (
-    <aside
-      className={`h-screen w-64 sticky top-0
-        ${
-          isStudent
-            ? "bg-slate-50 border-r border-slate-200 text-slate-600"
-            : "bg-gradient-to-b from-[#0f172a] to-[#020617] text-gray-300"
-        }`}
-    >
-      {/* Header */}
-      <div
-        className={`px-6 py-5 border-b
-          ${
-            isStudent
-              ? "border-slate-200"
-              : "border-white/10"
-          }`}
+    <>
+      {/* Overlay (mobile) */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed z-50 top-0 left-0 h-full w-64 transform bg-[#020617] text-gray-300
+          transition-transform duration-300
+          ${open ? "translate-x-0" : "-translate-x-full"}
+          md:translate-x-0 md:static md:flex
+        `}
       >
-        <h1
-          className={`font-bold text-lg
-            ${
-              isStudent ? "text-blue-600" : "text-white"
-            }`}
-        >
-          Tsinseta LMS
-        </h1>
+        <div className="flex flex-col w-full">
+          
+          {/* Header */}
+          <div className="flex justify-between items-center px-6 py-5 border-b border-white/10">
+            <h1 className="text-white font-bold">Tsinseta LMS</h1>
 
-        <p className="text-sm capitalize text-gray-500">
-          {isStudent ? "LMS Portal" : user?.role || "Portal"}
-        </p>
-      </div>
+            {/* Close button (mobile) */}
+            <button onClick={() => setOpen(false)} className="md:hidden">
+              <X />
+            </button>
+          </div>
 
-      {/* Menu */}
-      <nav className="px-3 py-4 space-y-1">
-        {items.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.link}
-              to={item.link}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition
-                ${
-                  isStudent
-                    ? isActive
-                      ? "bg-blue-100 text-blue-600 font-medium"
-                      : "hover:bg-slate-100"
-                    : isActive
-                      ? "bg-blue-600 text-white"
-                      : "hover:bg-white/10 hover:text-white"
-                }`
-              }
-            >
-              <Icon size={18} />
-              {item.label}
-            </NavLink>
-          );
-        })}
-      </nav>
-    </aside>
+          {/* Menu */}
+          <nav className="px-3 py-4 space-y-1">
+            {items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.link}
+                  to={item.link}
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition
+                    ${
+                      isActive
+                        ? "bg-blue-600 text-white"
+                        : "hover:bg-white/10 hover:text-white"
+                    }`
+                  }
+                >
+                  <Icon size={18} />
+                  {item.label}
+                </NavLink>
+              );
+            })}
+          </nav>
+        </div>
+      </aside>
+    </>
   );
 };
 

@@ -8,9 +8,14 @@ import User from "../models/Users.js";
  */
 export const getAnnouncements = async (req, res) => {
   try {
-    const announcements = await Announcement.find()
-      .populate("createdBy", "name email role avatar")
-      .sort({ createdAt: -1 });
+    // Filter to ensure public only sees active, published announcements
+    const announcements = await Announcement.find({ 
+      status: "published", 
+      isArchived: false 
+    })
+    .populate("createdBy", "name avatar") // Only get safe info
+    .sort({ publishedAt: -1 })
+    .limit(10); 
 
     res.json(announcements);
   } catch (err) {

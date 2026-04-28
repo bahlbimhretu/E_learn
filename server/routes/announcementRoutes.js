@@ -16,6 +16,7 @@ const router = express.Router();
 /**
  * Management (Admin / Teacher)
  */
+router.get("/public", getAnnouncements); // Use the existing controller
 router.get(
   "/manage",
   protect,
