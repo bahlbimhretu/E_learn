@@ -9,7 +9,10 @@ import {
   Bell,
   X,
   Clock,
-  UserCircle
+  UserCircle,
+  MessageSquare,
+  Calendar,
+  Users
 } from "lucide-react";
 
 // Helper: Format Date consistently
@@ -27,22 +30,20 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null); // Modal state
 
-
   // Fetch Public Announcements
-useEffect(() => {
-  const fetchAnnouncements = async () => {
-    try {
-      const response = await api.get("/announcements/public");
-      // Use .slice(0, 5) to keep only the first five items
-      setAnnouncements(response.data.slice(0, 5));
-    } catch (error) {
-      console.error("Error loading announcements:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchAnnouncements();
-}, []);
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const response = await api.get("/announcements/public");
+        setAnnouncements(response.data.slice(0, 5));
+      } catch (error) {
+        console.error("Error loading announcements:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAnnouncements();
+  }, []);
 
   return (
     <div className="bg-white text-gray-800 antialiased">
@@ -91,17 +92,44 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* ================= FEATURES ================= */}
+      {/* ================= FEATURES (UPDATED) ================= */}
       <section id="features" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h3 className="text-4xl font-extrabold text-blue-950 tracking-tight mb-4">Digital Learning Features</h3>
+            <h3 className="text-4xl font-extrabold text-blue-950 tracking-tight mb-4">Our Digital Learning Features</h3>
             <p className="text-gray-600">Our unified platform simplifies management and enhances learning for everyone.</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            <FeatureCard icon={<BookOpen size={28} />} title="Online Courses" desc="Access structured lessons, curriculum, and resources anytime." />
-            <FeatureCard icon={<GraduationCap size={28} />} title="Exams & Quizzes" desc="Take assessments with real-time evaluation and feedback." />
-            <FeatureCard icon={<BarChart3 size={28} />} title="Performance Tracking" desc="Monitor academic progress, grades, and attendance throughout the year." />
+            <FeatureCard 
+              icon={<BookOpen size={28} />} 
+              title="Online Courses" 
+              desc="Access structured lessons, resources, and digital content anytime." 
+            />
+            <FeatureCard 
+              icon={<GraduationCap size={28} />} 
+              title="Assignments & Exams" 
+              desc="Submit assignments and take quizzes with real-time evaluation." 
+            />
+            <FeatureCard 
+              icon={<BarChart3 size={28} />} 
+              title="Performance Tracking" 
+              desc="Monitor grades and academic progress throughout the year." 
+            />
+            <FeatureCard 
+              icon={<MessageSquare size={28} />} 
+              title="Parent Messaging" 
+              desc="Strong communication between teachers and parents." 
+            />
+            <FeatureCard 
+              icon={<Calendar size={28} />} 
+              title="Academic Calendar" 
+              desc="Stay informed with schedules, exams, and school events." 
+            />
+            <FeatureCard 
+              icon={<Users size={28} />} 
+              title="Role-Based Access" 
+              desc="One login system for Students, Teachers, Parents, and Admin." 
+            />
           </div>
         </div>
       </section>
@@ -133,7 +161,7 @@ useEffect(() => {
                   key={item._id} 
                   item={item}
                   index={index}
-                  onClick={() => setSelectedAnnouncement(item)} // Open Modal
+                  onClick={() => setSelectedAnnouncement(item)} 
                 />
               ))
             ) : (
@@ -146,77 +174,71 @@ useEffect(() => {
         </div>
       </section>
 
-     {/* ================= FOOTER ================= */}
-<footer id="contact" className="bg-[#050b1a] text-gray-400 pt-20 pb-10 border-t border-white/5">
-  <div className="max-w-8xl mx-auto px-6">
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-16">
-      
-      {/* Column 1: Brand Identity */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <GraduationCap className="text-blue-500" size={32} />
-          <span className="text-2xl font-bold text-white tracking-tight">Tsinseta Mariam</span>
-        </div>
-        <p className="text-sm leading-relaxed max-w-xs">
-          A leading senior secondary institution in Adigrat, dedicated to fostering innovation, 
-          academic excellence, and digital literacy in the next generation of leaders.
-        </p>
-        <div className="flex gap-4">
-          {/* Placeholder for Social Icons */}
-          <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all cursor-pointer">
-            <span className="text-xs font-bold uppercase">Fb</span>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-400 hover:text-white transition-all cursor-pointer">
-            <span className="text-xs font-bold uppercase">Tw</span>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all cursor-pointer">
-            <span className="text-xs font-bold uppercase">Yt</span>
-          </div>
-        </div>
-      </div>
+      {/* ================= FOOTER ================= */}
+      <footer id="contact" className="bg-[#050b1a] text-gray-400 pt-20 pb-10 border-t border-white/5">
+        <div className="max-w-8xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-16">
+            <div className="space-y-6">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="text-blue-500" size={32} />
+                <span className="text-2xl font-bold text-white tracking-tight">Tsinseta Mariam</span>
+              </div>
+              <p className="text-sm leading-relaxed max-w-xs">
+                A leading senior secondary institution in Adigrat, dedicated to fostering innovation, 
+                academic excellence, and digital literacy in the next generation of leaders.
+              </p>
+              <div className="flex gap-4">
+                <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all cursor-pointer">
+                  <span className="text-xs font-bold uppercase">Fb</span>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-blue-400 hover:text-white transition-all cursor-pointer">
+                  <span className="text-xs font-bold uppercase">Tw</span>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all cursor-pointer">
+                  <span className="text-xs font-bold uppercase">Yt</span>
+                </div>
+              </div>
+            </div>
 
-      {/* Column 2: Quick Links */}
-      <div>
-        <h4 className="text-white font-semibold mb-6 uppercase tracking-wider text-xs">Resources</h4>
-        <ul className="space-y-4 text-sm">
-          <li><a href="#about" className="hover:text-blue-400 transition-colors">About Our School</a></li>
-          <li><a href="#features" className="hover:text-blue-400 transition-colors">LMS Dashboard</a></li>
-          <li><a href="#announcements" className="hover:text-blue-400 transition-colors">Latest News</a></li>
-          <li><Link to="/login" className="hover:text-blue-400 transition-colors">Student Login</Link></li>
-        </ul>
-      </div>
+            <div>
+              <h4 className="text-white font-semibold mb-6 uppercase tracking-wider text-xs">Resources</h4>
+              <ul className="space-y-4 text-sm">
+                <li><a href="#about" className="hover:text-blue-400 transition-colors">About Our School</a></li>
+                <li><a href="#features" className="hover:text-blue-400 transition-colors">LMS Dashboard</a></li>
+                <li><a href="#announcements" className="hover:text-blue-400 transition-colors">Latest News</a></li>
+                <li><Link to="/login" className="hover:text-blue-400 transition-colors">Student Login</Link></li>
+              </ul>
+            </div>
 
-      {/* Column 3: Direct Contact */}
-      <div>
-        <h4 className="text-white font-semibold mb-6 uppercase tracking-wider text-xs">Contact Us</h4>
-        <div className="space-y-4 text-sm">
-          <div className="flex gap-3">
-            <div className="text-blue-500 mt-1 shrink-0">📍</div>
-            <p>Adigrat, Tigray, Ethiopia<br/><span className="text-xs opacity-60">Location</span></p>
+            <div>
+              <h4 className="text-white font-semibold mb-6 uppercase tracking-wider text-xs">Contact Us</h4>
+              <div className="space-y-4 text-sm">
+                <div className="flex gap-3">
+                  <div className="text-blue-500 mt-1 shrink-0">📍</div>
+                  <p>Adigrat, Tigray, Ethiopia<br/><span className="text-xs opacity-60">Location</span></p>
+                </div>
+                <div className="flex gap-3">
+                  <div className="text-blue-500 mt-1 shrink-0">✉️</div>
+                  <p>info@xxxxxxx.edu.et</p>
+                </div>
+                <div className="flex gap-3">
+                  <div className="text-blue-500 mt-1 shrink-0">📞</div>
+                  <p>+251 9XX XXX XXX</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-3">
-            <div className="text-blue-500 mt-1 shrink-0">✉️</div>
-            <p>info@xxxxxxx.edu.et</p>
-          </div>
-          <div className="flex gap-3">
-            <div className="text-blue-500 mt-1 shrink-0">📞</div>
-            <p>+251 9XX XXX XXX</p>
+
+          <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-xs opacity-50">
+              © {new Date().getFullYear()} Tsinseta Mariam Senior Secondary School.
+            </p>
+            <div className="flex gap-6 text-xs opacity-50 italic">
+              <span>Empowering Minds, Shaping Futures</span>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-
-    {/* Bottom Bar */}
-    <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-      <p className="text-xs opacity-50">
-        © {new Date().getFullYear()} Tsinseta Mariam Senior Secondary School.
-      </p>
-      <div className="flex gap-6 text-xs opacity-50 italic">
-        <span>Empowering Minds, Shaping Futures</span>
-      </div>
-    </div>
-  </div>
-</footer>
+      </footer>
 
       {/* ================= ANNOUNCEMENT DETAIL MODAL ================= */}
       <AnnouncementModal 
@@ -229,7 +251,6 @@ useEffect(() => {
 
 /* ================= HELPER COMPONENTS ================= */
 
-// Clean Nav Link helper
 function NavLink({ href, children }) {
   return (
     <a href={href} className="hover:text-blue-800 transition duration-150 relative group py-1">
@@ -239,7 +260,6 @@ function NavLink({ href, children }) {
   );
 }
 
-// Refined Feature Card
 function FeatureCard({ icon, title, desc }) {
   return (
     <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
@@ -252,7 +272,6 @@ function FeatureCard({ icon, title, desc }) {
   );
 }
 
-// Clickable Announcement List Item
 function AnnouncementListItem({ item, index, onClick }) {
   return (
     <motion.div 
@@ -273,7 +292,6 @@ function AnnouncementListItem({ item, index, onClick }) {
              {formatAppDate(item.publishedAt || item.createdAt)}
           </div>
         </div>
-        {/* Short preview - stripping HTML for preview */}
         <p className="text-gray-500 text-sm line-clamp-1 opacity-80">
           {item.contentHtml ? item.contentHtml.replace(/<[^>]*>?/gm, '') : ""}
         </p>
@@ -285,7 +303,6 @@ function AnnouncementListItem({ item, index, onClick }) {
   );
 }
 
-// Modern Modal for Details
 function AnnouncementModal({ announcement, onClose }) {
   return (
     <AnimatePresence>
@@ -294,17 +311,16 @@ function AnnouncementModal({ announcement, onClose }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={onClose} // Close on backdrop click
+          onClick={onClose}
           className="fixed inset-0 bg-blue-950/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 md:p-6"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+            onClick={(e) => e.stopPropagation()}
             className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col border border-gray-100"
           >
-            {/* Modal Header */}
             <div className="p-6 md:p-8 border-b border-gray-100 sticky top-0 bg-white z-10 flex justify-between items-start gap-4">
               <div>
                 <h2 className="text-2xl md:text-3xl font-extrabold text-blue-950 tracking-tight mb-2">
@@ -331,9 +347,7 @@ function AnnouncementModal({ announcement, onClose }) {
               </button>
             </div>
 
-            {/* Modal Content - Scrollable */}
             <div className="p-6 md:p-8 overflow-y-auto flex-1">
-              {/* This renders the actual rich text HTML from backend */}
               <div 
                 className="prose prose-blue max-w-none prose-sm md:prose-base text-gray-700 leading-relaxed
                            prose-headings:text-blue-950 prose-headings:font-bold 
@@ -342,7 +356,6 @@ function AnnouncementModal({ announcement, onClose }) {
               />
             </div>
             
-            {/* Modal Footer */}
             <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end">
                 <button 
                     onClick={onClose}

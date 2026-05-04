@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 import {
@@ -18,8 +18,12 @@ import {
 const AdminLayout = ({ children, stats }) => {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
 
-  const [open, setOpen] = useState(false); // ✅ NEW
+  // 🔒 Prevent background scroll when sidebar open (mobile)
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "auto";
+  }, [open]);
 
   const handleLogout = () => {
     logout();
@@ -30,7 +34,7 @@ const AdminLayout = ({ children, stats }) => {
     <NavLink
       to={to}
       end={end}
-      onClick={() => setOpen(false)} // close on mobile click
+      onClick={() => setOpen(false)}
       className={({ isActive }) =>
         `flex items-center gap-3 px-4 py-2 rounded-lg transition text-sm
         ${isActive ? "bg-blue-600 text-white" : "hover:bg-white/10"}`
@@ -44,7 +48,7 @@ const AdminLayout = ({ children, stats }) => {
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
 
-      {/* 🔹 MOBILE OVERLAY */}
+      {/* Overlay */}
       {open && (
         <div
           className="fixed inset-0 bg-black/40 z-40 md:hidden"
@@ -52,32 +56,27 @@ const AdminLayout = ({ children, stats }) => {
         />
       )}
 
-      {/* 🔹 SIDEBAR */}
+      {/* Sidebar */}
       <aside
-        className={`
-          fixed z-50 top-0 left-0 h-full w-64 transform
-          bg-gradient-to-b from-[#0f172a] to-[#020617] text-gray-300
-          transition-transform duration-300
-          ${open ? "translate-x-0" : "-translate-x-full"}
-          md:translate-x-0 md:static md:flex
-        `}
+        className={`fixed z-50 top-0 left-0 h-full w-64 transform
+        bg-gradient-to-b from-[#0f172a] to-[#020617] text-gray-300
+        transition-transform duration-300 overflow-y-auto
+        ${open ? "translate-x-0" : "-translate-x-full"}
+        md:translate-x-0 md:static md:flex`}
       >
         <div className="flex flex-col w-full">
 
-          {/* HEADER */}
           <div className="flex justify-between items-center px-6 py-5 border-b border-white/10">
             <div>
               <h1 className="text-white font-bold text-lg">Tsinseta LMS</h1>
               <p className="text-sm text-gray-400">Admin Portal</p>
             </div>
 
-            {/* Close button (mobile) */}
             <button onClick={() => setOpen(false)} className="md:hidden">
               <X />
             </button>
           </div>
 
-          {/* NAV */}
           <nav className="px-4 py-6 space-y-1">
             {navItem("/admin", "Dashboard", LayoutDashboard, true)}
             {navItem("/admin/users", "User Management", Users)}
@@ -90,16 +89,13 @@ const AdminLayout = ({ children, stats }) => {
         </div>
       </aside>
 
-      {/* 🔹 MAIN CONTENT */}
+      {/* Main */}
       <div className="flex flex-col flex-1">
 
-        {/* 🔹 NAVBAR */}
+        {/* Navbar */}
         <header className="bg-white border-b px-4 sm:px-6 py-3 flex items-center justify-between sticky top-0 z-10">
 
-          {/* LEFT */}
           <div className="flex items-center gap-3">
-
-            {/* Mobile menu button */}
             <button onClick={() => setOpen(true)} className="md:hidden">
               <Menu size={22} />
             </button>
@@ -121,12 +117,10 @@ const AdminLayout = ({ children, stats }) => {
             </div>
           </div>
 
-          {/* RIGHT */}
-          <div className="flex items-center gap-4 sm:gap-5">
+          <div className="flex items-center gap-3 sm:gap-5">
 
-            {/* Notifications */}
             <div className="relative cursor-pointer">
-              <Bell className="w-5 h-5 text-gray-600" />
+              <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
 
               {stats?.announcements?.active > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1.5 rounded-full">
@@ -135,7 +129,6 @@ const AdminLayout = ({ children, stats }) => {
               )}
             </div>
 
-            {/* Logout */}
             <button
               onClick={handleLogout}
               className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600 hover:text-red-600 transition"
@@ -146,11 +139,10 @@ const AdminLayout = ({ children, stats }) => {
           </div>
         </header>
 
-        {/* 🔹 CONTENT */}
+        {/* Content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           {children}
         </main>
-
       </div>
     </div>
   );
